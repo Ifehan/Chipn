@@ -16,15 +16,17 @@ export function Input({
   type = 'text',
   showPasswordToggle = false,
   className = '',
+  id,
   ...props
 }: InputProps) {
   const [showPassword, setShowPassword] = React.useState(false)
   const inputType = showPasswordToggle && showPassword ? 'text' : type
+  const inputId = id || React.useId()
 
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-900 mb-2">
           {label}
         </label>
       )}
@@ -35,6 +37,7 @@ export function Input({
           </div>
         )}
         <input
+          id={inputId}
           type={inputType}
           className={`w-full px-4 py-3 ${icon ? 'pl-10' : ''} bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${className}`}
           {...props}
