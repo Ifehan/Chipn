@@ -1,0 +1,243 @@
+name: PR Tests with Coverage
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Jest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: unit-tests-coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          echo "## Unit Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const fs = require('fs');
+              const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+              const total = coverage.total;
+              console.log('| Metric | Coverage | Status |');
+              console.log('|--------|----------|--------|');
+              console.log(\`| Lines | \${total.lines.pct}% | \${total.lines.pct >= 90 ? '✅' : '❌'} |\`);
+              console.log(\`| Statements | \${total.statements.pct}% | \${total.statements.pct >= 90 ? '✅' : '❌'} |\`);
+              console.log(\`| Functions | \${total.functions.pct}% | \${total.functions.pct >= 90 ? '✅' : '❌'} |\`);
+              console.log(\`| Branches | \${total.branches.pct}% | \${total.branches.pct >= 90 ? '✅' : '❌'} |\`);
+            " >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('coverage/coverage-summary.json')) {
+              const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+              const total = coverage.total;
+
+              const coverageComment = `## 📊 Unit Test Coverage Report
+
+              | Metric | Coverage | Required | Status |
+              |--------|----------|----------|--------|
+              | Lines | ${total.lines.pct}% | 90% | ${total.lines.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
+              | Statements | ${total.statements.pct}% | 90% | ${total.statements.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
+              | Functions | ${total.functions.pct}% | 90% | ${total.functions.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
+              | Branches | ${total.branches.pct}% | 90% | ${total.branches.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
+
+              ${total.lines.pct >= 90 && total.statements.pct >= 90 && total.functions.pct >= 90 && total.branches.pct >= 90
+                ? '✅ **Coverage threshold met! Ready to merge.**'
+                : '❌ **Coverage below 90% threshold. Please add more tests before merging.**'}
+              `;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: coverageComment
+              });
+            }
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 30
+
+      - name: Comment E2E results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let e2eComment = '## 🎭 E2E Test Results\n\n';
+
+            if (fs.existsSync('playwright-report/results.json')) {
+              const results = JSON.parse(fs.readFileSync('playwright-report/results.json', 'utf8'));
+              const stats = results.stats || {};
+              const total = (stats.expected || 0) + (stats.unexpected || 0) + (stats.flaky || 0) + (stats.skipped || 0);
+              const passed = stats.expected || 0;
+              const failed = stats.unexpected || 0;
+              const flaky = stats.flaky || 0;
+              const skipped = stats.skipped || 0;
+
+              e2eComment += `| Status | Count |\n`;
+              e2eComment += `|--------|-------|\n`;
+              e2eComment += `| ✅ Passed | ${passed} |\n`;
+              e2eComment += `| ❌ Failed | ${failed} |\n`;
+              e2eComment += `| ⚠️ Flaky | ${flaky} |\n`;
+              e2eComment += `| ⏭️ Skipped | ${skipped} |\n`;
+              e2eComment += `| **Total** | **${total}** |\n\n`;
+
+              if (failed === 0) {
+                e2eComment += '✅ **All E2E tests passed!**\n';
+              } else {
+                e2eComment += '❌ **Some E2E tests failed. Please review the test report.**\n';
+              }
+            } else {
+              e2eComment += '⚠️ Could not find E2E test results.\n';
+            }
+
+            e2eComment += '\n📊 [View detailed Playwright report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: e2eComment
+            });
+
+  coverage-gate:
+    name: Coverage Gate (90% Required)
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run coverage check
+        run: npm run test:coverage
+
+      - name: Verify coverage threshold
+        run: |
+          echo "Checking if coverage meets 90% threshold..."
+          node -e "
+            const fs = require('fs');
+            if (!fs.existsSync('coverage/coverage-summary.json')) {
+              console.error('❌ Coverage summary not found');
+              process.exit(1);
+            }
+            const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const total = coverage.total;
+            const threshold = 90;
+
+            console.log('Coverage Results:');
+            console.log('  Lines:', total.lines.pct + '%');
+            console.log('  Statements:', total.statements.pct + '%');
+            console.log('  Functions:', total.functions.pct + '%');
+            console.log('  Branches:', total.branches.pct + '%');
+            console.log('');
+
+            const meetsThreshold =
+              total.lines.pct >= threshold &&
+              total.statements.pct >= threshold &&
+              total.functions.pct >= threshold &&
+              total.branches.pct >= threshold;
+
+            if (meetsThreshold) {
+              console.log('✅ Coverage threshold of ' + threshold + '% met!');
+              process.exit(0);
+            } else {
+              console.error('❌ Coverage below ' + threshold + '% threshold');
+              console.error('Please add more tests to meet the coverage requirement.');
+              process.exit(1);
+            }
+          "
+
+      - name: Block merge if coverage fails
+        if: failure()
+        run: |
+          echo "::error::Coverage is below 90% threshold. PR cannot be merged."
+          exit 1

@@ -24,12 +24,13 @@ const config: Config = {
     '!src/main.tsx',
     '!src/vite-env.d.ts',
   ],
+  coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
     },
   },
   testMatch: [
