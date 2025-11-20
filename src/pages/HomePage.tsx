@@ -1,28 +1,15 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Header } from '../components/molecules/Header'
 import { TabsContainer } from '../components/molecules/TabsContainer'
 import { StatsContainer } from '../components/molecules/StatsContainer'
 import { QuickActions } from '../components/molecules/QuickActions'
 import { RecentBillsSection } from '../components/organisms/RecentBillsSection'
-import { BillsContent } from '../components/organisms/BillsContent'
 import { GroupsContent } from '../components/organisms/GroupsContent'
-import { ProfileSettingsPage } from './ProfileSettingsPage'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'bills' | 'groups'>('bills')
-  const [showProfile, setShowProfile] = useState(false)
-
-  if (showProfile) {
-    return (
-      <ProfileSettingsPage
-        onBack={() => setShowProfile(false)}
-        userName="test"
-        userEmail="test@mail.com"
-        phoneNumber="+254710670537"
-        avatar="T"
-      />
-    )
-  }
 
   return (
     <div className="app-shell">
@@ -31,7 +18,7 @@ export function HomePage() {
           userName="test"
           phoneNumber="+254710670537"
           avatar="T"
-          onProfileClick={() => setShowProfile(true)}
+          onProfileClick={() => navigate('/profile')}
         />
 
         <TabsContainer activeTab={activeTab} onTabChange={setActiveTab} />

@@ -6,6 +6,7 @@ import { HomePage } from "./pages/HomePage"
 import { ProfileSettingsPage } from "./pages/ProfileSettingsPage"
 import { CreateNewBillPage } from "./pages/CreateNewBillPage"
 import { TransactionHistoryPage } from "./pages/TransactionHistoryPage"
+import { ProtectedRoute } from "./components/ProtectedRoute"
 
 export default function App() {
   return (
@@ -14,21 +15,44 @@ export default function App() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={
-            <ProfileSettingsPage
-              onBack={() => window.history.back()}
-              userName="test"
-              userEmail="test@mail.com"
-              phoneNumber="+254710670537"
-              avatar="T"
-            />
+            <ProtectedRoute>
+              <ProfileSettingsPage
+                onBack={() => window.history.back()}
+                userName="test"
+                userEmail="test@mail.com"
+                phoneNumber="+254710670537"
+                avatar="T"
+              />
+            </ProtectedRoute>
           }
         />
-        <Route path="/create-bill" element={<CreateNewBillPage />} />
-        <Route path="/transaction-history" element={<TransactionHistoryPage />} />
+        <Route
+          path="/create-bill"
+          element={
+            <ProtectedRoute>
+              <CreateNewBillPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transaction-history"
+          element={
+            <ProtectedRoute>
+              <TransactionHistoryPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   )

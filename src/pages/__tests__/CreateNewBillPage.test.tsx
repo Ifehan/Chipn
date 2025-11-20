@@ -223,13 +223,13 @@ describe('CreateNewBillPage', () => {
     renderCreateNewBillPage();
 
     // Fill in all required fields
+    const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
     const amountInput = screen.getByPlaceholderText('0');
-    const descriptionInput = screen.getByPlaceholderText(/What's this bill for/i);
     const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
     const addButton = screen.getByText('+');
 
+    await user.type(billNameInput, 'Lunch');
     await user.type(amountInput, '1000');
-    await user.type(descriptionInput, 'Lunch');
     await user.type(phoneInput, '+254712345678');
     await user.click(addButton);
 
@@ -243,11 +243,13 @@ describe('CreateNewBillPage', () => {
     renderCreateNewBillPage();
 
     // Fill in all required fields
+    const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
     const amountInput = screen.getByPlaceholderText('0');
     const descriptionInput = screen.getByPlaceholderText(/What's this bill for/i);
     const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
     const addButton = screen.getByText('+');
 
+    await user.type(billNameInput, 'Lunch Bill');
     await user.type(amountInput, '1000');
     await user.type(descriptionInput, 'Lunch');
     await user.type(phoneInput, '+254712345678');
@@ -257,6 +259,7 @@ describe('CreateNewBillPage', () => {
     await user.click(sendButton);
 
     expect(consoleSpy).toHaveBeenCalledWith('[v0] Bill details:', {
+      billName: 'Lunch Bill',
       totalAmount: '1000',
       description: 'Lunch',
       splitMethod: 'equal',

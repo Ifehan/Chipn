@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Development service
+  tunga-pay-dev:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    container_name: tunga-pay-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - tunga-pay-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Production service
+  tunga-pay-prod:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+    container_name: tunga-pay-prod
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - tunga-pay-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  tunga-pay-network:
+    driver: bridge

@@ -14,6 +14,8 @@ export function LoginPage() {
       console.log('Logging in:', { email, password })
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
+      // Set authentication flag
+      sessionStorage.setItem('isAuthenticated', 'true')
       navigate('/home')
     } catch (error) {
       console.error('Login failed:', error)

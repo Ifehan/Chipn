@@ -3,6 +3,13 @@ import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import HomePage from '../HomePage';
 
+const mockNavigate = jest.fn();
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
+
 // Mock child components
 jest.mock('../../components/molecules/Header', () => ({
   Header: ({ onProfileClick }: any) => (
@@ -38,14 +45,6 @@ jest.mock('../../components/organisms/GroupsContent', () => ({
   GroupsContent: () => <div data-testid="mock-groups-content">Groups Content</div>,
 }));
 
-jest.mock('../ProfileSettingsPage', () => ({
-  ProfileSettingsPage: ({ onBack }: any) => (
-    <div data-testid="mock-profile-settings">
-      <button onClick={onBack}>Back from Profile</button>
-    </div>
-  ),
-}));
-
 const renderHomePage = () => {
   return render(
     <BrowserRouter>
@@ -55,6 +54,9 @@ const renderHomePage = () => {
 };
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+  });
   it('renders without crashing', () => {
     renderHomePage();
     expect(screen.getByTestId('mock-header')).toBeInTheDocument();
@@ -98,31 +100,14 @@ describe('HomePage', () => {
     expect(screen.queryByTestId('mock-recent-bills')).not.toBeInTheDocument();
   });
 
-  it('shows profile settings page when profile is clicked', async () => {
+  it('navigates to profile settings when profile is clicked', async () => {
     const user = userEvent.setup();
     renderHomePage();
 
     const profileButton = screen.getByText('Profile');
     await user.click(profileButton);
 
-    expect(screen.getByTestId('mock-profile-settings')).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-header')).not.toBeInTheDocument();
-  });
-
-  it('returns to home page from profile settings', async () => {
-    const user = userEvent.setup();
-    renderHomePage();
-
-    // Navigate to profile
-    const profileButton = screen.getByText('Profile');
-    await user.click(profileButton);
-
-    // Navigate back
-    const backButton = screen.getByText('Back from Profile');
-    await user.click(backButton);
-
-    expect(screen.getByTestId('mock-header')).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-profile-settings')).not.toBeInTheDocument();
+    expect(mockNavigate).toHaveBeenCalledWith('/profile');
   });
 
   it('has correct layout structure', () => {

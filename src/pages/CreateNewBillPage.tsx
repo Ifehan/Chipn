@@ -7,9 +7,10 @@ import { SplitMethodSelector } from "../components/molecules/SplitMethodSelector
 
 export function CreateNewBillPage() {
   const navigate = useNavigate()
+  const [billName, setBillName] = useState("")
   const [totalAmount, setTotalAmount] = useState("")
   const [description, setDescription] = useState("")
-  const [splitMethod, setSplitMethod] = useState<"equal" | "custom">("equal")
+  const [splitMethod, setSplitMethod] = useState<"equal" | "percentage" | "custom">("equal")
   const [participants, setParticipants] = useState<string[]>([])
   const [phoneInput, setPhoneInput] = useState("")
 
@@ -21,11 +22,11 @@ export function CreateNewBillPage() {
   }
 
   const handleSendRequests = () => {
-    console.log("[v0] Bill details:", { totalAmount, description, splitMethod, participants })
+    console.log("[v0] Bill details:", { billName, totalAmount, description, splitMethod, participants })
     navigate("/home")
   }
 
-  const isFormValid = totalAmount && parseFloat(totalAmount) > 0 && description.trim() && participants.length > 0
+  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0
 
   return (
     <div className="app-shell bg-gray-50 min-h-screen">
@@ -52,10 +53,24 @@ export function CreateNewBillPage() {
             </p>
           </div>
 
+          {/* Bill Name */}
+          <div>
+            <label htmlFor="bill-name" className="block text-sm font-medium text-gray-900 mb-2">Bill Name</label>
+            <input
+              id="bill-name"
+              type="text"
+              value={billName}
+              onChange={(e) => setBillName(e.target.value)}
+              placeholder="e.g., Dinner at Restaurant"
+              className="w-full bg-gray-50 border-0 rounded-lg px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           {/* Total Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Total Amount (KSH)</label>
+            <label htmlFor="total-amount" className="block text-sm font-medium text-gray-900 mb-2">Total Amount (KSH)</label>
             <input
+              id="total-amount"
               type="number"
               value={totalAmount}
               onChange={(e) => setTotalAmount(e.target.value)}
@@ -66,8 +81,9 @@ export function CreateNewBillPage() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-2">Description</label>
             <input
+              id="description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}

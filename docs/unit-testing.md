@@ -20,6 +20,9 @@ Tests are co-located with their components in `__tests__` directories:
 ```
 src/
 ├── components/
+│   ├── ProtectedRoute.tsx
+│   ├── __tests__/
+│   │   └── ProtectedRoute.test.tsx
 │   ├── atoms/
 │   │   ├── Avatar.tsx
 │   │   ├── BackButton.tsx
@@ -257,6 +260,16 @@ describe('HomePage Integration', () => {
 
 ### Current Test Coverage
 
+#### **Core Components (1 component)**
+- [`ProtectedRoute.test.tsx`](src/components/__tests__/ProtectedRoute.test.tsx)
+
+**Coverage includes:**
+- Authentication state checking via sessionStorage
+- Redirect behavior for unauthenticated users
+- Rendering protected content for authenticated users
+- Navigation with replace to prevent back button issues
+- Edge cases (missing/false/invalid sessionStorage values)
+
 #### **Atoms (8 components)**
 - [`Avatar.test.tsx`](src/components/atoms/__tests__/Avatar.test.tsx)
 - [`BackButton.test.tsx`](src/components/atoms/__tests__/BackButton.test.tsx)
@@ -283,7 +296,7 @@ describe('HomePage Integration', () => {
 - [`QuickActions.test.tsx`](src/components/molecules/__tests__/QuickActions.test.tsx)
 - [`SectionCard.test.tsx`](src/components/molecules/__tests__/SectionCard.test.tsx)
 - [`SignupForm.test.tsx`](src/components/molecules/__tests__/SignupForm.test.tsx)
-- [`SplitMethodSelector.test.tsx`](src/components/molecules/__tests__/SplitMethodSelector.test.tsx)
+- [`SplitMethodSelector.test.tsx`](src/components/molecules/__tests__/SplitMethodSelector.test.tsx) - **Updated with 3-button layout (Equal, Percentage, Custom)**
 - [`StatsContainer.test.tsx`](src/components/molecules/__tests__/StatsContainer.test.tsx)
 - [`TabsContainer.test.tsx`](src/components/molecules/__tests__/TabsContainer.test.tsx)
 
@@ -311,8 +324,8 @@ describe('HomePage Integration', () => {
 - Multi-step workflows
 
 #### **Pages (7 pages)**
-- [`CreateNewBillPage.test.tsx`](src/pages/__tests__/CreateNewBillPage.test.tsx)
-- [`HomePage.test.tsx`](src/pages/__tests__/HomePage.test.tsx)
+- [`CreateNewBillPage.test.tsx`](src/pages/__tests__/CreateNewBillPage.test.tsx) - **Updated with billName field validation**
+- [`HomePage.test.tsx`](src/pages/__tests__/HomePage.test.tsx) - **Updated with router-based navigation**
 - [`LoginPage.test.tsx`](src/pages/__tests__/LoginPage.test.tsx)
 - [`ProfileSettingsPage.test.tsx`](src/pages/__tests__/ProfileSettingsPage.test.tsx)
 - [`SignupPage.test.tsx`](src/pages/__tests__/SignupPage.test.tsx)
@@ -646,6 +659,38 @@ user.click(button); // Missing await
 - Don't rely on timing (avoid `setTimeout`)
 - Clear mocks and state between tests
 - Use `findBy*` queries instead of `getBy*` for async content
+
+## Recent Updates
+
+### 2025-11-20: Test Suite Improvements
+
+**Fixed Failing Tests:**
+1. **SplitMethodSelector** - Updated to reflect 3-button layout (Equal, Percentage, Custom)
+   - Changed text assertions from "Equal Split"/"Custom Split" to "Equal"/"Percentage"/"Custom"
+   - Updated grid layout from 2 to 3 columns
+   - Added percentage button tests
+   - Updated icon count from 2 to 3
+
+2. **HomePage** - Updated navigation tests for router-based navigation
+   - Added `useNavigate` mock
+   - Changed from inline profile rendering to router navigation
+   - Tests now verify `navigate('/profile')` is called
+
+3. **CreateNewBillPage** - Added billName field validation
+   - Updated form validation tests to include billName input
+   - Updated console.log assertions to include billName field
+
+**New Test Coverage:**
+- **ProtectedRoute** - Added comprehensive test suite (6 tests)
+  - Authentication state checking
+  - Redirect behavior
+  - sessionStorage validation
+  - Edge case handling
+
+**Test Statistics:**
+- Total Test Suites: 34 (all passing)
+- Total Tests: 428 (all passing)
+- Coverage: 95.66% statements, 97.72% branches, 97.4% functions, 95.61% lines
 
 ## Additional Resources
 

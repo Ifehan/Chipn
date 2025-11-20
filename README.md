@@ -50,8 +50,8 @@ A modern bill splitting and payment management application built with React, Typ
 - **Notifications:** Sonner 1.7
 
 ### Testing
-- **Testing Framework:** Jest 30.2
-- **Testing Library:** React Testing Library 16.3
+- **Unit/Integration Testing:** Jest 30.2 + React Testing Library 16.3
+- **E2E Testing:** Playwright 1.56 with Page Object Model
 - **Test Utilities:** @testing-library/user-event 14.6, @testing-library/jest-dom 6.9
 - **Coverage:** 70% threshold for branches, functions, lines, and statements
 
@@ -64,6 +64,22 @@ A modern bill splitting and payment management application built with React, Typ
 
 ```
 tunga-pay/
+├── docker/                     # Docker configuration
+│   ├── dev/                    # Development environment
+│   │   └── Dockerfile          # Dev Dockerfile
+│   └── prod/                   # Production environment
+│       ├── Dockerfile          # Production Dockerfile
+│       └── nginx.conf          # Nginx configuration
+├── e2e/                        # E2E tests with Playwright
+│   ├── pages/                  # Page Object Models
+│   │   ├── BasePage.ts
+│   │   ├── WelcomePage.ts
+│   │   ├── LoginPage.ts
+│   │   ├── HomePage.ts
+│   │   └── CreateBillPage.ts
+│   ├── auth.spec.ts            # Authentication tests
+│   ├── bills.spec.ts           # Bill management tests
+│   └── navigation.spec.ts      # Navigation tests
 ├── src/
 │   ├── components/
 │   │   ├── atoms/              # Basic building blocks (8 components)
@@ -120,8 +136,14 @@ tunga-pay/
 ├── postcss.config.cjs
 ├── jest.config.ts              # Jest configuration
 ├── jest.setup.ts               # Test environment setup
-├── README.md                   # This file
-└── TESTING.md                  # Comprehensive testing documentation
+├── playwright.config.ts        # Playwright E2E configuration
+├── docker-compose.yml          # Docker Compose configuration
+├── .dockerignore               # Docker ignore file
+├── docs/                       # Documentation directory
+│   ├── README.md              # Documentation index
+│   ├── unit-testing.md        # Unit/Integration testing guide
+│   └── e2e-testing.md         # E2E testing guide
+└── README.md                   # This file
 ```
 
 ## 🏗️ Component Architecture
@@ -191,8 +213,11 @@ Full page components that combine organisms, molecules, and atoms:
 
 - Node.js (v16 or higher)
 - npm, yarn, or pnpm
+- Docker and Docker Compose (for containerized deployment)
 
 ### Installation
+
+#### Option 1: Local Development (without Docker)
 
 1. Clone the repository:
 ```bash
@@ -215,6 +240,40 @@ npm run dev
 http://localhost:5173
 ```
 
+#### Option 2: Docker Development
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd tunga-pay
+```
+
+2. Start the development container:
+```bash
+docker-compose up tunga-pay-dev
+```
+
+3. Open your browser and navigate to:
+```
+http://localhost:5173
+```
+
+The development container includes hot-reload, so changes to your code will be reflected immediately.
+
+#### Option 3: Docker Production
+
+1. Build and start the production container:
+```bash
+docker-compose up tunga-pay-prod
+```
+
+2. Open your browser and navigate to:
+```
+http://localhost
+```
+
+The production build is optimized and served via Nginx.
+
 ## 📜 Available Scripts
 
 ### Development
@@ -223,36 +282,119 @@ http://localhost:5173
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
 
+### Docker Commands
+
+**Development:**
+```bash
+# Start development container
+docker-compose up tunga-pay-dev
+
+# Start in detached mode
+docker-compose up -d tunga-pay-dev
+
+# Stop development container
+docker-compose down
+
+# View logs
+docker-compose logs -f tunga-pay-dev
+
+# Rebuild container
+docker-compose up --build tunga-pay-dev
+```
+
+**Production:**
+```bash
+# Build and start production container
+docker-compose up tunga-pay-prod
+
+# Start in detached mode
+docker-compose up -d tunga-pay-prod
+
+# Stop production container
+docker-compose down
+
+# View logs
+docker-compose logs -f tunga-pay-prod
+
+# Rebuild container
+docker-compose up --build tunga-pay-prod
+```
+
+**Using Dockerfile directly:**
+```bash
+# Build development image
+docker build -f docker/dev/Dockerfile -t tunga-pay:dev .
+
+# Run development container
+docker run -p 5173:5173 -v $(pwd):/app -v /app/node_modules tunga-pay:dev
+
+# Build production image
+docker build -f docker/prod/Dockerfile -t tunga-pay:prod .
+
+# Run production container
+docker run -p 80:80 tunga-pay:prod
+```
+
 ### Testing
-- `npm test` - Run all tests
+
+**Unit/Integration Tests (Jest):**
+- `npm test` - Run all unit/integration tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Generate coverage report
 - `npm run test:ui` - Run tests with verbose output
 
-See [`TESTING.md`](TESTING.md) for comprehensive testing documentation.
+**E2E Tests (Playwright):**
+- `npm run test:e2e` - Run all E2E tests
+- `npm run test:e2e:ui` - Run E2E tests in UI mode
+- `npm run test:e2e:headed` - Run E2E tests in headed mode
+- `npm run test:e2e:debug` - Debug E2E tests
+- `npm run test:e2e:report` - View E2E test report
+
+See [`docs/unit-testing.md`](docs/unit-testing.md) for unit/integration testing and [`docs/e2e-testing.md`](docs/e2e-testing.md) for E2E testing documentation.
 
 ## 🧪 Testing
 
-The project has comprehensive test coverage with **33 test files** covering all component levels:
+The project has comprehensive test coverage at multiple levels:
 
+### Unit & Integration Tests (Jest + RTL)
+**33 test files** covering all component levels:
 - **8 Atom tests** - Unit tests for basic components
 - **11 Molecule tests** - Tests for composed components
 - **7 Organism tests** - Integration tests for complex sections
 - **7 Page tests** - Full page integration tests
 
-**Testing Stack:**
+**Stack:**
 - Jest 30.2 with jsdom environment
 - React Testing Library 16.3
 - User Event 14.6 for interaction simulation
 - 70% coverage threshold
 
-**Key Testing Features:**
+**Features:**
 - Co-located tests in `__tests__` directories
 - Custom render utilities with router support
 - Mocked browser APIs (matchMedia, IntersectionObserver, ResizeObserver)
-- Comprehensive test patterns and best practices
 
-For detailed testing guidelines, see [`TESTING.md`](TESTING.md).
+### E2E Tests (Playwright)
+**3 test suites** covering critical user workflows:
+- **Authentication tests** - Login, signup, form validation
+- **Bill management tests** - Create bills, form interactions
+- **Navigation tests** - Routing, tab switching, protected routes
+
+**Stack:**
+- Playwright 1.56 with TypeScript
+- Page Object Model architecture
+- Multi-browser testing (Chromium, Firefox, WebKit)
+- Mobile viewport testing
+
+**Features:**
+- Automatic dev server startup
+- Screenshots and videos on failure
+- Trace recording for debugging
+- Parallel test execution
+
+### Documentation
+- [`docs/unit-testing.md`](docs/unit-testing.md) - Unit/Integration testing guide
+- [`docs/e2e-testing.md`](docs/e2e-testing.md) - E2E testing guide
 
 ## 🎨 Styling
 
@@ -280,6 +422,7 @@ The project uses **Tailwind CSS** for styling with custom configurations:
 - **[`postcss.config.cjs`](postcss.config.cjs)** - PostCSS plugins configuration
 - **[`jest.config.ts`](jest.config.ts)** - Jest testing configuration
 - **[`jest.setup.ts`](jest.setup.ts)** - Test environment setup
+- **[`playwright.config.ts`](playwright.config.ts)** - Playwright E2E configuration
 
 ## 📊 Code Quality
 
@@ -290,10 +433,11 @@ The project uses **Tailwind CSS** for styling with custom configurations:
 - No implicit any
 
 ### Testing Coverage
-- 70% minimum coverage threshold
+- 70% minimum coverage threshold (Jest)
 - Unit tests for all atoms and molecules
 - Integration tests for organisms and pages
-- User interaction testing with userEvent
+- E2E tests for critical user workflows
+- User interaction testing with userEvent and Playwright
 
 ### Best Practices
 - Atomic Design methodology
@@ -319,6 +463,41 @@ The project uses **Tailwind CSS** for styling with custom configurations:
 - Multi-currency support
 - Receipt scanning with OCR
 
+## 🐳 Docker Architecture
+
+The project includes a multi-stage Dockerfile with three targets:
+
+### Development Stage
+- Based on Node.js 18 Alpine
+- Includes all dependencies (dev + production)
+- Hot-reload enabled via volume mounting
+- Exposes port 5173 for Vite dev server
+- Ideal for local development
+
+### Production Stage
+- Multi-stage build for optimized image size
+- Builder stage compiles the application
+- Production stage uses Nginx Alpine
+- Serves static files with optimized caching
+- Includes security headers and gzip compression
+- Health checks configured
+- Exposes port 80
+
+### Docker Compose Services
+
+**tunga-pay-dev:**
+- Development environment with hot-reload
+- Volume mounting for live code changes
+- Port 5173 exposed
+- Auto-restart enabled
+
+**tunga-pay-prod:**
+- Production-ready deployment
+- Optimized Nginx configuration
+- Port 80 exposed
+- Health checks enabled
+- Auto-restart enabled
+
 ## 🔐 Environment Setup
 
 For production deployment, ensure to:
@@ -327,9 +506,30 @@ For production deployment, ensure to:
 2. **Set up authentication** middleware and JWT handling
 3. **Implement secure session** management
 4. **Connect to database** for data persistence
-5. **Enable HTTPS** for secure communication
+5. **Enable HTTPS** for secure communication (use reverse proxy like Traefik or Nginx)
 6. **Set up monitoring** and error tracking
 7. **Configure CDN** for static assets
+
+### Docker Production Deployment
+
+For production Docker deployment:
+
+1. **Use environment variables** in docker-compose.yml:
+```yaml
+environment:
+  - VITE_API_URL=https://api.example.com
+  - VITE_APP_ENV=production
+```
+
+2. **Enable HTTPS** with reverse proxy (Traefik, Nginx Proxy Manager, or Caddy)
+
+3. **Use Docker secrets** for sensitive data
+
+4. **Set up health monitoring** with the built-in health checks
+
+5. **Configure logging** with Docker logging drivers
+
+6. **Use Docker volumes** for persistent data if needed
 
 ## 🤝 Contributing
 
@@ -338,7 +538,7 @@ When contributing to this project, please:
 1. **Follow the atomic design structure** - Place components in the correct directory
 2. **Maintain TypeScript typing** - Add proper types for all props and functions
 3. **Use Tailwind CSS** for styling - Avoid inline styles or CSS modules
-4. **Write tests** - Add tests for new components (see [`TESTING.md`](TESTING.md))
+4. **Write tests** - Add unit tests for components and E2E tests for workflows
 5. **Keep components focused** - Single responsibility principle
 6. **Document complex logic** - Add comments for non-obvious code
 7. **Run tests before committing** - Ensure all tests pass
@@ -355,10 +555,15 @@ When contributing to this project, please:
 
 ## 📚 Documentation
 
-- **[`README.md`](README.md)** - This file, project overview
-- **[`TESTING.md`](TESTING.md)** - Comprehensive testing documentation
+All documentation is organized in the [`docs/`](docs/) directory:
+
+- **[`docs/README.md`](docs/README.md)** - Documentation index and overview
+- **[`docs/unit-testing.md`](docs/unit-testing.md)** - Unit/Integration testing guide
+- **[`docs/e2e-testing.md`](docs/e2e-testing.md)** - E2E testing guide
 - **Component Documentation** - JSDoc comments in component files
 - **Type Definitions** - TypeScript interfaces and types
+
+For a complete list of available documentation, see the [**Documentation Index**](docs/README.md).
 
 ## 📄 License
 
