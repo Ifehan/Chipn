@@ -31,10 +31,6 @@ export default function App() {
             <ProtectedRoute>
               <ProfileSettingsPage
                 onBack={() => window.history.back()}
-                userName="test"
-                userEmail="test@mail.com"
-                phoneNumber="+254710670537"
-                avatar="T"
               />
             </ProtectedRoute>
           }

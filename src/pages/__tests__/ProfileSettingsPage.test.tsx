@@ -1,7 +1,26 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import ProfileSettingsPage from '../ProfileSettingsPage';
+
+// Suppress act warnings for async state updates in useEffect
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('Warning: An update to') ||
+       args[0].includes('inside a test was not wrapped in act'))
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
 
 const mockGetCurrentUser = jest.fn();
 
@@ -85,7 +104,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders without crashing', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
@@ -93,7 +118,9 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('fetches and displays user data from API', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
 
     await waitFor(() => {
       expect(mockGetCurrentUser).toHaveBeenCalled();
@@ -107,7 +134,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders page title', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
@@ -115,7 +148,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders BackButton component', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
@@ -125,7 +164,14 @@ describe('ProfileSettingsPage', () => {
   it('calls onBack when back button is clicked', async () => {
     const user = userEvent.setup();
     const onBack = jest.fn();
-    renderProfileSettingsPage({ onBack });
+
+    await act(async () => {
+      renderProfileSettingsPage({ onBack });
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
@@ -138,7 +184,9 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders ProfileCard with fetched user data', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
 
     await waitFor(() => {
       const profileCard = screen.getByTestId('mock-profile-card');
@@ -150,7 +198,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders all settings sections', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-account-settings')).toBeInTheDocument();
@@ -160,7 +214,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('passes phoneNumber to PaymentSettingsSection', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/Payment Settings - \+254712345678/)).toBeInTheDocument();
@@ -168,7 +228,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders app info section', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByText('TandaPay')).toBeInTheDocument();
@@ -178,7 +244,13 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('renders LogoutButton component', async () => {
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
@@ -188,7 +260,14 @@ describe('ProfileSettingsPage', () => {
   it('logs to console when logout is clicked', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     const user = userEvent.setup();
-    renderProfileSettingsPage();
+
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
@@ -202,10 +281,19 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('has correct page layout', async () => {
-    const { container } = renderProfileSettingsPage();
+    let container: HTMLElement;
+
+    await act(async () => {
+      const result = renderProfileSettingsPage();
+      container = result.container;
+    });
 
     await waitFor(() => {
-      const mainContainer = container.querySelector('.app-shell');
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      const mainContainer = container!.querySelector('.app-shell');
       expect(mainContainer).toBeInTheDocument();
     });
   });
@@ -220,7 +308,9 @@ describe('ProfileSettingsPage', () => {
       error: new Error('Failed to fetch user'),
     });
 
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/failed to load profile/i)).toBeInTheDocument();
@@ -250,7 +340,9 @@ describe('ProfileSettingsPage', () => {
       error: null,
     });
 
-    renderProfileSettingsPage();
+    await act(async () => {
+      renderProfileSettingsPage();
+    });
 
     await waitFor(() => {
       expect(mockGetCurrentUser).toHaveBeenCalled();
@@ -274,10 +366,19 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('has scrollable content area', async () => {
-    const { container } = renderProfileSettingsPage();
+    let container: HTMLElement;
+
+    await act(async () => {
+      const result = renderProfileSettingsPage();
+      container = result.container;
+    });
 
     await waitFor(() => {
-      const scrollableContainer = container.querySelector('.overflow-y-auto');
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      const scrollableContainer = container!.querySelector('.overflow-y-auto');
       expect(scrollableContainer).toBeInTheDocument();
     });
   });

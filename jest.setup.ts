@@ -5,6 +5,42 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
+// Suppress console errors and logs during tests to keep output clean
+// These are intentional application logs that are expected during error scenario tests
+const originalError = console.error;
+const originalLog = console.log;
+
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    // Suppress application error logs (Login failed, Password reset failed, Signup failed)
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('Login failed:') ||
+       args[0].includes('Password reset failed:') ||
+       args[0].includes('Signup failed:'))
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+
+  console.log = (...args: any[]) => {
+    // Suppress application success logs (User created successfully)
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('User created successfully:')
+    ) {
+      return;
+    }
+    originalLog.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+  console.log = originalLog;
+});
+
 // Mock import.meta for Vite compatibility
 Object.defineProperty(global, 'import', {
   value: {
