@@ -21,6 +21,7 @@ tunga-pay/
 │   │   ├── BasePage.ts           # Base page with common methods
 │   │   ├── WelcomePage.ts        # Welcome/landing page
 │   │   ├── LoginPage.ts          # Login page
+│   │   ├── PasswordResetPage.ts  # Password reset page
 │   │   ├── HomePage.ts           # Main dashboard
 │   │   └── CreateBillPage.ts     # Bill creation page
 │   ├── auth.spec.ts              # Authentication flow tests
@@ -68,18 +69,23 @@ npm run test:e2e:report
 
 ### 1. Authentication Tests ([`e2e/auth.spec.ts`](e2e/auth.spec.ts))
 
-Tests user authentication flows and form validation.
+Tests user authentication flows, password reset, and form validation.
 
 **Test Coverage:**
 - Welcome page display and navigation
 - Login form rendering and interaction
 - Form validation (empty fields, invalid email)
 - Successful login flow
+- Password reset page display and navigation
+- Password reset form interaction and validation
+- Forgot password link from login page
+- Complete password reset journey (Login → Forgot Password → Reset → Back to Login)
 - Navigation between auth pages
 - Complete authentication journey (Welcome → Login → Home)
 
-**Example:**
+**Examples:**
 ```typescript
+// Authentication journey
 test('should complete full authentication journey', async ({ page }) => {
   const welcomePage = new WelcomePage(page);
   await welcomePage.navigate();
@@ -89,6 +95,20 @@ test('should complete full authentication journey', async ({ page }) => {
   await loginPage.login('user@example.com', 'password');
 
   await expect(page).toHaveURL('/home');
+});
+
+// Password reset journey
+test('should complete password reset flow', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.navigate();
+
+  const forgotPasswordLink = page.getByText(/forgot password/i);
+  await forgotPasswordLink.click();
+
+  const passwordResetPage = new PasswordResetPage(page);
+  await passwordResetPage.requestPasswordReset('user@example.com');
+
+  await expect(page).toHaveURL('/password-reset');
 });
 ```
 

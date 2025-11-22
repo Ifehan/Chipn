@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { WelcomePage } from "./pages/WelcomePage"
 import { LoginPage } from "./pages/LoginPage"
 import { SignupPage } from "./pages/SignupPage"
+import { PasswordResetPage } from "./pages/PasswordResetPage"
 import { HomePage } from "./pages/HomePage"
 import { ProfileSettingsPage } from "./pages/ProfileSettingsPage"
 import { CreateNewBillPage } from "./pages/CreateNewBillPage"
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/password-reset" element={<PasswordResetPage />} />
         <Route
           path="/home"
           element={

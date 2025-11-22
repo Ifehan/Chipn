@@ -2,43 +2,82 @@ import React, { useState } from 'react'
 import { Input } from '../atoms/Input'
 import { Button } from '../atoms/Button'
 
-interface LoginFormProps {
-  onSubmit?: (email: string, password: string) => Promise<void>
+interface PasswordResetFormProps {
+  onSubmit?: (email: string) => Promise<void>
   onBack?: () => void
-  onForgotPassword?: () => void
   isLoading?: boolean
   error?: string
+  success?: boolean
 }
 
-export function LoginForm({
+export function PasswordResetForm({
   onSubmit,
   onBack,
-  onForgotPassword,
   isLoading = false,
-  error: externalError
-}: LoginFormProps) {
+  error: externalError,
+  success = false
+}: PasswordResetFormProps) {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!email || !password) {
-      setError('Please fill in all fields')
+    if (!email) {
+      setError('Please enter your email address')
+      return
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
       return
     }
 
     if (onSubmit) {
-      await onSubmit(email, password)
+      await onSubmit(email)
     }
   }
 
   const displayError = externalError || error
 
+  if (success) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">✅</span>
+            <div>
+              <h3 className="font-semibold text-green-900 mb-1">
+                Check Your Email
+              </h3>
+              <p className="text-sm text-green-700">
+                Password reset link has been sent to your email. Please check your inbox and follow the instructions.
+              </p>
+            </div>
+          </div>
+        </div>
+        <Button
+          variant="primary"
+          fullWidth
+          onClick={onBack}
+          type="button"
+        >
+          Back to Login
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
+      </div>
       <Input
         label="Email Address"
         type="email"
@@ -48,30 +87,10 @@ export function LoginForm({
         icon="📧"
         disabled={isLoading}
       />
-      <Input
-        label="Password"
-        type="password"
-        placeholder="Enter your password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        showPasswordToggle
-        icon="🔒"
-        disabled={isLoading}
-      />
       {displayError && (
         <p className="text-red-500 text-sm" role="alert">
           {displayError}
         </p>
-      )}
-      {onForgotPassword && (
-        <button
-          type="button"
-          onClick={onForgotPassword}
-          className="text-sm text-green-600 hover:text-green-700 hover:underline"
-          disabled={isLoading}
-        >
-          Forgot Password?
-        </button>
       )}
       <Button
         variant="primary"
@@ -101,10 +120,10 @@ export function LoginForm({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Signing In...
+            Sending...
           </span>
         ) : (
-          'Sign In'
+          'Send Reset Link'
         )}
       </Button>
       <Button
@@ -114,10 +133,10 @@ export function LoginForm({
         type="button"
         disabled={isLoading}
       >
-        Back
+        Back to Login
       </Button>
     </form>
   )
 }
 
-export default LoginForm
+export default PasswordResetForm

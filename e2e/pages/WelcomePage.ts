@@ -62,6 +62,7 @@ export class WelcomePage extends BasePage {
    * Verify page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    return await this.heading.isVisible();
+    // Check if create account button is visible (more reliable than heading)
+    return await this.createAccountButton.isVisible().catch(() => false);
   }
 }

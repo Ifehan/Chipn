@@ -5,6 +5,19 @@ import { HomePage } from './pages/HomePage';
 test.describe('Navigation and User Flows', () => {
   // Helper function to login before each test
   async function loginUser(page: any) {
+    // Mock the login API call
+    await page.route('**/auth/login', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          access_token: 'mock-jwt-token-12345',
+          token_type: 'bearer',
+          expires_in: 3600
+        })
+      });
+    });
+
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
     await loginPage.login('test@example.com', 'password123');
@@ -203,6 +216,19 @@ test.describe('Navigation and User Flows', () => {
       // Clear sessionStorage first
       await page.goto('/');
       await page.evaluate(() => sessionStorage.clear());
+
+      // Mock the login API call
+      await page.route('**/auth/login', async (route: any) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            access_token: 'mock-jwt-token-12345',
+            token_type: 'bearer',
+            expires_in: 3600
+          })
+        });
+      });
 
       // Start at welcome
       await page.goto('/');

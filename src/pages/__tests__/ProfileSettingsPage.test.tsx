@@ -1,7 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import ProfileSettingsPage from '../ProfileSettingsPage';
+
+const mockGetCurrentUser = jest.fn();
+
+jest.mock('../../hooks/useUsers', () => ({
+  useCurrentUser: () => ({
+    getCurrentUser: mockGetCurrentUser,
+    loading: false,
+    error: null,
+  }),
+}));
 
 // Mock child components
 jest.mock('../../components/atoms/BackButton', () => ({
@@ -49,10 +59,15 @@ jest.mock('../../components/molecules/LogoutButton', () => ({
 
 const defaultProps = {
   onBack: jest.fn(),
-  userName: 'Test User',
-  userEmail: 'test@example.com',
-  phoneNumber: '+254712345678',
-  avatar: 'T',
+};
+
+const mockUserData = {
+  id: 'user123',
+  first_name: 'John',
+  last_name: 'Doe',
+  email: 'john@example.com',
+  phone_number: '+254712345678',
+  id_type: 'passport',
 };
 
 const renderProfileSettingsPage = (props = {}) => {
@@ -66,21 +81,45 @@ const renderProfileSettingsPage = (props = {}) => {
 describe('ProfileSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetCurrentUser.mockResolvedValue(mockUserData);
   });
 
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     renderProfileSettingsPage();
-    expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
+    });
   });
 
-  it('renders page title', () => {
+  it('fetches and displays user data from API', async () => {
     renderProfileSettingsPage();
-    expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      expect(screen.getByText('+254712345678')).toBeInTheDocument();
+    });
   });
 
-  it('renders BackButton component', () => {
+  it('renders page title', async () => {
     renderProfileSettingsPage();
-    expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
+    });
+  });
+
+  it('renders BackButton component', async () => {
+    renderProfileSettingsPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
+    });
   });
 
   it('calls onBack when back button is clicked', async () => {
@@ -88,54 +127,72 @@ describe('ProfileSettingsPage', () => {
     const onBack = jest.fn();
     renderProfileSettingsPage({ onBack });
 
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
+    });
+
     const backButton = screen.getByTestId('mock-back-button');
     await user.click(backButton);
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
-  it('renders ProfileCard with correct props', () => {
+  it('renders ProfileCard with fetched user data', async () => {
     renderProfileSettingsPage();
 
-    const profileCard = screen.getByTestId('mock-profile-card');
-    expect(profileCard).toBeInTheDocument();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    expect(screen.getByText('+254712345678')).toBeInTheDocument();
-    expect(screen.getByText('T')).toBeInTheDocument();
+    await waitFor(() => {
+      const profileCard = screen.getByTestId('mock-profile-card');
+      expect(profileCard).toBeInTheDocument();
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      expect(screen.getByText('+254712345678')).toBeInTheDocument();
+    });
   });
 
-  it('renders all settings sections', () => {
+  it('renders all settings sections', async () => {
     renderProfileSettingsPage();
 
-    expect(screen.getByTestId('mock-account-settings')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-payment-settings')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-support-section')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-account-settings')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-payment-settings')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-support-section')).toBeInTheDocument();
+    });
   });
 
-  it('passes phoneNumber to PaymentSettingsSection', () => {
+  it('passes phoneNumber to PaymentSettingsSection', async () => {
     renderProfileSettingsPage();
 
-    expect(screen.getByText(/Payment Settings - \+254712345678/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Payment Settings - \+254712345678/)).toBeInTheDocument();
+    });
   });
 
-  it('renders app info section', () => {
+  it('renders app info section', async () => {
     renderProfileSettingsPage();
 
-    expect(screen.getByText('TandaPay')).toBeInTheDocument();
-    expect(screen.getByText('Version 1.0.0 MVP')).toBeInTheDocument();
-    expect(screen.getByText('Secure bill splitting powered by M-PESA')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('TandaPay')).toBeInTheDocument();
+      expect(screen.getByText('Version 1.0.0 MVP')).toBeInTheDocument();
+      expect(screen.getByText('Secure bill splitting powered by M-PESA')).toBeInTheDocument();
+    });
   });
 
-  it('renders LogoutButton component', () => {
+  it('renders LogoutButton component', async () => {
     renderProfileSettingsPage();
-    expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
+    });
   });
 
   it('logs to console when logout is clicked', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     const user = userEvent.setup();
     renderProfileSettingsPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
+    });
 
     const logoutButton = screen.getByTestId('mock-logout-button');
     await user.click(logoutButton);
@@ -144,49 +201,72 @@ describe('ProfileSettingsPage', () => {
     consoleSpy.mockRestore();
   });
 
-  it('has correct page layout', () => {
+  it('has correct page layout', async () => {
     const { container } = renderProfileSettingsPage();
 
-    const mainContainer = container.querySelector('.app-shell');
-    expect(mainContainer).toBeInTheDocument();
+    await waitFor(() => {
+      const mainContainer = container.querySelector('.app-shell');
+      expect(mainContainer).toBeInTheDocument();
+    });
   });
 
-  it('renders components in correct order', () => {
+  it('handles API errors gracefully', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    mockGetCurrentUser.mockRejectedValueOnce(new Error('Failed to fetch user'));
+
     renderProfileSettingsPage();
 
-    const backButton = screen.getByTestId('mock-back-button');
-    const profileCard = screen.getByTestId('mock-profile-card');
-    const accountSettings = screen.getByTestId('mock-account-settings');
-    const paymentSettings = screen.getByTestId('mock-payment-settings');
-    const supportSection = screen.getByTestId('mock-support-section');
-    const logoutButton = screen.getByTestId('mock-logout-button');
-
-    expect(backButton).toBeInTheDocument();
-    expect(profileCard).toBeInTheDocument();
-    expect(accountSettings).toBeInTheDocument();
-    expect(paymentSettings).toBeInTheDocument();
-    expect(supportSection).toBeInTheDocument();
-    expect(logoutButton).toBeInTheDocument();
-  });
-
-  it('handles different user data', () => {
-    renderProfileSettingsPage({
-      userName: 'Jane Doe',
-      userEmail: 'jane@example.com',
-      phoneNumber: '+254700000000',
-      avatar: 'J',
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load profile/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
-    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
-    expect(screen.getByText('+254700000000')).toBeInTheDocument();
-    expect(screen.getByText('J')).toBeInTheDocument();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to fetch user data:',
+      expect.any(Error)
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 
-  it('has scrollable content area', () => {
+  it('shows loading state while fetching user data', () => {
+    // Mock loading state
+    jest.spyOn(require('../../hooks/useUsers'), 'useCurrentUser').mockReturnValue({
+      getCurrentUser: mockGetCurrentUser,
+      loading: true,
+      error: null,
+    });
+
+    renderProfileSettingsPage();
+
+    expect(screen.getByText(/loading profile/i)).toBeInTheDocument();
+  });
+
+  it('renders components in correct order after loading', async () => {
+    renderProfileSettingsPage();
+
+    await waitFor(() => {
+      const backButton = screen.getByTestId('mock-back-button');
+      const profileCard = screen.getByTestId('mock-profile-card');
+      const accountSettings = screen.getByTestId('mock-account-settings');
+      const paymentSettings = screen.getByTestId('mock-payment-settings');
+      const supportSection = screen.getByTestId('mock-support-section');
+      const logoutButton = screen.getByTestId('mock-logout-button');
+
+      expect(backButton).toBeInTheDocument();
+      expect(profileCard).toBeInTheDocument();
+      expect(accountSettings).toBeInTheDocument();
+      expect(paymentSettings).toBeInTheDocument();
+      expect(supportSection).toBeInTheDocument();
+      expect(logoutButton).toBeInTheDocument();
+    });
+  });
+
+  it('has scrollable content area', async () => {
     const { container } = renderProfileSettingsPage();
 
-    const scrollableContainer = container.querySelector('.overflow-y-auto');
-    expect(scrollableContainer).toBeInTheDocument();
+    await waitFor(() => {
+      const scrollableContainer = container.querySelector('.overflow-y-auto');
+      expect(scrollableContainer).toBeInTheDocument();
+    });
   });
 });

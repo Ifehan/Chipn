@@ -4,10 +4,19 @@ import userEvent from '@testing-library/user-event';
 import SignupPage from '../SignupPage';
 
 const mockNavigate = jest.fn();
+const mockCreateUser = jest.fn();
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
+}));
+
+jest.mock('../../hooks/useUsers', () => ({
+  useCreateUser: () => ({
+    createUser: mockCreateUser,
+    loading: false,
+    error: null,
+  }),
 }));
 
 // Mock child components
@@ -28,9 +37,11 @@ jest.mock('../../components/molecules/SignupForm', () => ({
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit({
-          name: 'Test User',
-          email: 'test@example.com',
-          phone: '+254712345678',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          phoneNumber: '+254712345678',
+          idType: 'passport',
           password: 'password123',
         });
       }}
@@ -54,12 +65,15 @@ const renderSignupPage = () => {
 describe('SignupPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    jest.clearAllTimers();
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
+    mockCreateUser.mockClear();
+    mockCreateUser.mockResolvedValue({
+      id: 'user123',
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      phone_number: '+254712345678',
+      id_type: 'passport',
+    });
   });
 
   it('renders without crashing', () => {
@@ -84,42 +98,32 @@ describe('SignupPage', () => {
     expect(authCard).toContainElement(signupForm);
   });
 
-  it('handles signup submission', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  it('handles signup submission with correct API format', async () => {
     const user = userEvent.setup({ delay: null });
     renderSignupPage();
 
     const signUpButton = screen.getByText('Sign Up');
     await user.click(signUpButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Signing up:', {
-      name: 'Test User',
-      email: 'test@example.com',
-      phone: '+254712345678',
-      password: 'password123',
+    await waitFor(() => {
+      expect(mockCreateUser).toHaveBeenCalledWith({
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        phone_number: '+254712345678',
+        id_type: 'passport',
+        password: 'password123',
+      });
     });
-
-    consoleSpy.mockRestore();
-  });
-
-  it('shows loading state during signup', async () => {
-    const user = userEvent.setup({ delay: null });
-    renderSignupPage();
-
-    const signUpButton = screen.getByText('Sign Up');
-    await user.click(signUpButton);
-
-    // Component should be in loading state
-    // (In real implementation, you might check for disabled button or loading spinner)
   });
 
   it('handles signup errors gracefully', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     const user = userEvent.setup({ delay: null });
 
-    // Mock console.log to throw an error
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
-      throw new Error('Signup failed');
+    mockCreateUser.mockRejectedValueOnce({
+      message: 'Email already exists',
+      status: 400,
     });
 
     renderSignupPage();
@@ -130,11 +134,34 @@ describe('SignupPage', () => {
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Signup failed:',
-        expect.any(Error)
+        expect.objectContaining({
+          message: 'Email already exists',
+        })
       );
     });
 
-    consoleLogSpy.mockRestore();
+    await waitFor(() => {
+      expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('displays generic error message when error has no message', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const user = userEvent.setup({ delay: null });
+
+    mockCreateUser.mockRejectedValueOnce(new Error());
+
+    renderSignupPage();
+
+    const signUpButton = screen.getByText('Sign Up');
+    await user.click(signUpButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to create account/i)).toBeInTheDocument();
+    });
+
     consoleErrorSpy.mockRestore();
   });
 
@@ -162,5 +189,27 @@ describe('SignupPage', () => {
     // Verify form has submit and back buttons
     expect(screen.getByText('Sign Up')).toBeInTheDocument();
     expect(screen.getByText('Back')).toBeInTheDocument();
+  });
+
+  it('logs successful user creation', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const user = userEvent.setup({ delay: null });
+    renderSignupPage();
+
+    const signUpButton = screen.getByText('Sign Up');
+    await user.click(signUpButton);
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'User created successfully:',
+        expect.objectContaining({
+          id: 'user123',
+          first_name: 'John',
+          last_name: 'Doe',
+        })
+      );
+    });
+
+    consoleSpy.mockRestore();
   });
 });

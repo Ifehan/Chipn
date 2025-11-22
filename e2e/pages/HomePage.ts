@@ -112,9 +112,17 @@ export class HomePage extends BasePage {
    * Verify page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    // Check if tabs are visible (they're always present on home page)
-    const billsTabVisible = await this.billsTab.isVisible().catch(() => false);
-    const groupsTabVisible = await this.groupsTab.isVisible().catch(() => false);
-    return billsTabVisible || groupsTabVisible;
+    try {
+      // Wait for tabs to be visible (they're always present on home page)
+      await this.billsTab.waitFor({ state: 'visible', timeout: 5000 });
+      return true;
+    } catch {
+      try {
+        await this.groupsTab.waitFor({ state: 'visible', timeout: 5000 });
+        return true;
+      } catch {
+        return false;
+      }
+    }
   }
 }

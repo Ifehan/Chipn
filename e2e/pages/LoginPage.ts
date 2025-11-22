@@ -91,9 +91,7 @@ export class LoginPage extends BasePage {
    * Verify page is loaded
    */
   async isLoaded(): Promise<boolean> {
-    // Check if either heading or email input is visible
-    const headingVisible = await this.heading.isVisible().catch(() => false);
-    const emailVisible = await this.emailInput.isVisible().catch(() => false);
-    return headingVisible || emailVisible;
+    // Check if email input is visible (more reliable)
+    return await this.emailInput.isVisible().catch(() => false);
   }
 }

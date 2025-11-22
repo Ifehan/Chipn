@@ -2,26 +2,32 @@ import { useState } from 'react'
 import { AuthCard } from '../components/organisms/AuthCard'
 import { LoginForm } from '../components/molecules/LoginForm'
 import { useNavigate } from 'react-router-dom'
+import { authService } from '../services/auth.service'
+import type { ApiError } from '../services/api-client'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true)
+    setError('')
+
     try {
-      // TODO: Implement actual login logic
-      console.log('Logging in:', { email, password })
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // Set authentication flag
-      sessionStorage.setItem('isAuthenticated', 'true')
+      await authService.login({ email, password })
       navigate('/home')
-    } catch (error) {
-      console.error('Login failed:', error)
+    } catch (err) {
+      const apiError = err as ApiError
+      setError(apiError.message || 'Login failed. Please try again.')
+      console.error('Login failed:', err)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleForgotPassword = () => {
+    navigate('/password-reset')
   }
 
   return (
@@ -32,10 +38,12 @@ export function LoginPage() {
       <LoginForm
         onSubmit={handleLogin}
         onBack={() => navigate('/')}
+        onForgotPassword={handleForgotPassword}
+        isLoading={isLoading}
+        error={error}
       />
     </AuthCard>
   )
 }
-
 
 export default LoginPage
