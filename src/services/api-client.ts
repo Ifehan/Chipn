@@ -5,9 +5,15 @@
 
 // Use a function to safely access import.meta in Vite, fallback to process.env for Jest
 const getApiBaseUrl = (): string => {
-  // Check if we're in a browser environment (Vite)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  // Try to access import.meta.env (Vite)
+  try {
+    // @ts-ignore - import.meta is available in Vite but not in Jest
+    if (import.meta?.env?.VITE_API_BASE_URL) {
+      // @ts-ignore
+      return import.meta.env.VITE_API_BASE_URL;
+    }
+  } catch (e) {
+    // import.meta not available, continue to fallback
   }
 
   // Check if we're in a Node environment (Jest)

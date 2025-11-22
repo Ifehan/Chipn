@@ -1,12 +1,15 @@
+// Mock the api-client to avoid import.meta issues
+jest.mock('../../services/api-client');
+
+// Mock the auth service
+jest.mock('../../services/auth.service');
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginPage } from '../LoginPage';
 import { authService } from '../../services/auth.service';
 import type { LoginResponse } from '../../services/types/auth.types';
-
-// Mock the auth service
-jest.mock('../../services/auth.service');
 
 // Mock useNavigate
 const mockNavigate = jest.fn();

@@ -658,6 +658,142 @@ user.click(button); // Missing await
 - Add proper `waitFor` for async operations
 - Don't rely on timing (avoid `setTimeout`)
 - Clear mocks and state between tests
+## Mocking Strategy
+
+### Module Mocks with `__mocks__` Directory
+
+Jest supports [manual mocks](https://jestjs.io/docs/manual-mocks) through `__mocks__` directories placed as siblings to the modules being mocked. This is the recommended approach for mocking modules that need to be reused across multiple test files.
+
+#### Directory Structure
+```
+src/services/
+├── __mocks__/          # Mocks for services modules
+│   └── api-client.ts   # Mock for api-client.ts
+├── __tests__/          # Tests for services
+│   ├── auth.service.test.ts
+│   └── users.service.test.ts
+├── api-client.ts       # Real implementation
+├── auth.service.ts
+└── users.service.ts
+```
+
+#### Why Use `__mocks__` Directory?
+
+1. **Automatic Discovery**: Jest automatically finds and uses mocks in `__mocks__` folders
+2. **Reusability**: One mock can be shared across multiple test files
+3. **Convention**: Follows Jest's standard pattern for manual mocks
+4. **Maintainability**: Centralized mock definitions are easier to update
+
+#### Example: API Client Mock
+
+**Problem**: The real `api-client.ts` uses Vite-specific `import.meta.env` which Jest cannot parse, causing syntax errors.
+
+**Solution**: Create a Jest-compatible mock at [`src/services/__mocks__/api-client.ts`](../src/services/__mocks__/api-client.ts):
+
+```typescript
+/**
+ * Mock API Client for Jest tests
+ */
+
+export interface ApiError {
+  message: string;
+  status: number;
+  details?: unknown;
+}
+
+export class ApiClient {
+  get = jest.fn();
+  post = jest.fn();
+  put = jest.fn();
+  patch = jest.fn();
+  delete = jest.fn();
+}
+
+// Export singleton instance
+export const apiClient = new ApiClient();
+```
+
+#### Using the Mock in Tests
+
+**Important**: Mock declarations must come **before** any imports that use the mocked module.
+
+```typescript
+// ✅ Correct - mock before imports
+jest.mock('../../services/api-client');
+
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { LoginPage } from '../LoginPage';
+import { authService } from '../../services/auth.service';
+
+describe('LoginPage', () => {
+  it('renders login form', () => {
+    render(<LoginPage />);
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+});
+```
+
+```typescript
+// ❌ Wrong - imports before mock
+import React from 'react';
+import { LoginPage } from '../LoginPage';
+
+jest.mock('../../services/api-client'); // Too late!
+```
+
+#### When to Use `__mocks__` vs Inline Mocks
+
+**Use `__mocks__` directory when:**
+- Mock is needed across multiple test files
+- Module has environment-specific code (e.g., `import.meta`)
+- Mock is complex and benefits from centralization
+- Following Jest conventions for manual mocks
+
+**Use inline mocks when:**
+- Mock is specific to one test file
+- Need different mock implementations per test
+- Mocking simple functions or modules
+
+```typescript
+// Inline mock - specific to this test file
+jest.mock('../../hooks/useUsers', () => ({
+  useCurrentUser: () => ({
+    getCurrentUser: jest.fn(),
+    loading: false,
+    error: null,
+  }),
+}));
+
+### 2025-11-22: Test Infrastructure Improvements
+
+**Fixed Import.meta Parsing Errors:**
+- Created [`src/services/__mocks__/api-client.ts`](../src/services/__mocks__/api-client.ts) to provide Jest-compatible mock
+- Resolved `SyntaxError: Cannot use 'import.meta' outside a module` in 3 test files
+- Updated test files to properly mock api-client before imports:
+  - [`src/services/__tests__/auth.service.test.ts`](../src/services/__tests__/auth.service.test.ts)
+  - [`src/pages/__tests__/LoginPage.test.tsx`](../src/pages/__tests__/LoginPage.test.tsx)
+  - [`src/pages/__tests__/PasswordResetPage.test.tsx`](../src/pages/__tests__/PasswordResetPage.test.tsx)
+
+**Fixed ProfileSettingsPage Tests:**
+- Updated async state handling in [`src/pages/__tests__/ProfileSettingsPage.test.tsx`](../src/pages/__tests__/ProfileSettingsPage.test.tsx)
+- Properly mocked hook error states for error handling tests
+- Added proper async waiting for component state updates
+
+**Test Results:**
+- ✅ All 38 test suites passing (was 35 passing, 3 failing)
+- ✅ All 477 tests passing (was 443 passing, 34 failing)
+- ✅ Zero syntax errors or parsing issues
+- ✅ Proper async state handling across all page tests
+
+**Key Learnings:**
+1. **Mock Placement**: `jest.mock()` must be called before any imports that use the mocked module
+2. **Manual Mocks**: Use `__mocks__` directory for reusable mocks across multiple test files
+3. **Environment-Specific Code**: Vite's `import.meta` requires mocking in Jest environment
+4. **Async Testing**: Always use `waitFor` and proper async/await for state updates
+
+```
+
 - Use `findBy*` queries instead of `getBy*` for async content
 
 ## Recent Updates

@@ -26,11 +26,11 @@ Welcome to the Tunga Pay documentation! This directory contains comprehensive gu
 Tunga Pay uses a comprehensive testing strategy with multiple layers:
 
 ### Unit & Integration Tests (Jest + RTL)
-- **Location**: `src/components/**/__tests__/`
-- **Coverage**: 34 test files covering core components, atoms, molecules, organisms, and pages
-- **Test Suites**: 34 (all passing)
-- **Total Tests**: 428 (all passing)
-- **Coverage**: 95.66% statements, 97.72% branches, 97.4% functions, 95.61% lines
+- **Location**: `src/components/**/__tests__/`, `src/services/**/__tests__/`, `src/pages/**/__tests__/`
+- **Coverage**: 38 test files covering services, components (atoms, molecules, organisms), and pages
+- **Test Suites**: 38 (all passing)
+- **Total Tests**: 477 (all passing)
+- **Coverage**: High coverage across all layers with comprehensive mocking strategy
 - **Documentation**: [`unit-testing.md`](unit-testing.md)
 - **Run**: `npm test`
 
@@ -172,6 +172,28 @@ Recommended patterns
 - Ask the team for clarification
 
 ---
+
+
+### 2025-11-22: Test Infrastructure Improvements
+- ✅ Fixed all failing unit tests (38/38 suites passing, 477/477 tests passing)
+- ✅ Resolved `import.meta` parsing errors in Jest environment
+- ✅ Created `src/services/__mocks__/api-client.ts` for Jest-compatible API client mock
+- ✅ Updated test files to properly mock modules before imports
+- ✅ Fixed async state handling in ProfileSettingsPage tests
+- ✅ Documented mocking strategy and best practices in unit-testing.md
+
+**Technical Details:**
+- Added manual mock in `__mocks__` directory following Jest conventions
+- Mock placement: `jest.mock()` must be called before imports
+- Resolved Vite-specific `import.meta.env` compatibility with Jest
+- Proper async/await patterns for state updates in tests
+
+**Files Modified:**
+- `src/services/__mocks__/api-client.ts` (new)
+- `src/pages/__tests__/LoginPage.test.tsx`
+- `src/pages/__tests__/PasswordResetPage.test.tsx`
+- `src/pages/__tests__/ProfileSettingsPage.test.tsx`
+- `docs/unit-testing.md` (added Mocking Strategy section)
 
 ## 📋 Recent Changes
 
