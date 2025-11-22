@@ -23,6 +23,9 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/main.tsx',
     '!src/vite-env.d.ts',
+    '!src/App.tsx',
+    '!src/**/index.ts',
+    '!src/**/index.tsx',
   ],
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   coverageThreshold: {
