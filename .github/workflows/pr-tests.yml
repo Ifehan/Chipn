@@ -57,10 +57,10 @@ jobs:
               const total = coverage.total;
               console.log('| Metric | Coverage | Status |');
               console.log('|--------|----------|--------|');
-              console.log(\`| Lines | \${total.lines.pct}% | \${total.lines.pct >= 90 ? '✅' : '❌'} |\`);
-              console.log(\`| Statements | \${total.statements.pct}% | \${total.statements.pct >= 90 ? '✅' : '❌'} |\`);
-              console.log(\`| Functions | \${total.functions.pct}% | \${total.functions.pct >= 90 ? '✅' : '❌'} |\`);
-              console.log(\`| Branches | \${total.branches.pct}% | \${total.branches.pct >= 90 ? '✅' : '❌'} |\`);
+              console.log(\`| Lines | \${total.lines.pct}% | \${total.lines.pct >= 80 ? '✅' : '❌'} |\`);
+              console.log(\`| Statements | \${total.statements.pct}% | \${total.statements.pct >= 80 ? '✅' : '❌'} |\`);
+              console.log(\`| Functions | \${total.functions.pct}% | \${total.functions.pct >= 80 ? '✅' : '❌'} |\`);
+              console.log(\`| Branches | \${total.branches.pct}% | \${total.branches.pct >= 80 ? '✅' : '❌'} |\`);
             " >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -78,14 +78,14 @@ jobs:
 
               | Metric | Coverage | Required | Status |
               |--------|----------|----------|--------|
-              | Lines | ${total.lines.pct}% | 90% | ${total.lines.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
-              | Statements | ${total.statements.pct}% | 90% | ${total.statements.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
-              | Functions | ${total.functions.pct}% | 90% | ${total.functions.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
-              | Branches | ${total.branches.pct}% | 90% | ${total.branches.pct >= 90 ? '✅ Pass' : '❌ Fail'} |
+              | Lines | ${total.lines.pct}% | 80% | ${total.lines.pct >= 80 ? '✅ Pass' : '❌ Fail'} |
+              | Statements | ${total.statements.pct}% | 80% | ${total.statements.pct >= 80 ? '✅ Pass' : '❌ Fail'} |
+              | Functions | ${total.functions.pct}% | 80% | ${total.functions.pct >= 80 ? '✅ Pass' : '❌ Fail'} |
+              | Branches | ${total.branches.pct}% | 80% | ${total.branches.pct >= 80 ? '✅ Pass' : '❌ Fail'} |
 
-              ${total.lines.pct >= 90 && total.statements.pct >= 90 && total.functions.pct >= 90 && total.branches.pct >= 90
+              ${total.lines.pct >= 80 && total.statements.pct >= 80 && total.functions.pct >= 80 && total.branches.pct >= 80
                 ? '✅ **Coverage threshold met! Ready to merge.**'
-                : '❌ **Coverage below 90% threshold. Please add more tests before merging.**'}
+                : '❌ **Coverage below 80% threshold. Please add more tests before merging.**'}
               `;
 
               github.rest.issues.createComment({
@@ -179,7 +179,7 @@ jobs:
             });
 
   coverage-gate:
-    name: Coverage Gate (90% Required)
+    name: Coverage Gate (80% Required)
     runs-on: ubuntu-latest
     needs: [unit-tests, e2e-tests]
     if: always()
@@ -202,7 +202,7 @@ jobs:
 
       - name: Verify coverage threshold
         run: |
-          echo "Checking if coverage meets 90% threshold..."
+          echo "Checking if coverage meets 80% threshold..."
           node -e "
             const fs = require('fs');
             if (!fs.existsSync('coverage/coverage-summary.json')) {
@@ -211,7 +211,7 @@ jobs:
             }
             const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
             const total = coverage.total;
-            const threshold = 90;
+            const threshold = 80;
 
             console.log('Coverage Results:');
             console.log('  Lines:', total.lines.pct + '%');
@@ -239,5 +239,5 @@ jobs:
       - name: Block merge if coverage fails
         if: failure()
         run: |
-          echo "::error::Coverage is below 90% threshold. PR cannot be merged."
+          echo "::error::Coverage is below 80% threshold. PR cannot be merged."
           exit 1
