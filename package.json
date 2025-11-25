@@ -8,6 +8,7 @@
     "type-check": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
+    "postinstall": "playwright install --with-deps",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
