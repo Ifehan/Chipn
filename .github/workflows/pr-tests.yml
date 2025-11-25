@@ -19,25 +19,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run type check
-        run: pnpm run type-check
+        run: npm run type-check
 
       - name: Run unit tests with coverage
-        run: pnpm run test:coverage
+        run: npm run test:coverage
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
@@ -109,25 +104,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: pnpm run test:e2e -- --project=chromium
+        run: npm run test:e2e -- --project=chromium
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -198,22 +188,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run coverage check
-        run: pnpm run test:coverage
+        run: npm run test:coverage
 
       - name: Verify coverage threshold
         run: |
