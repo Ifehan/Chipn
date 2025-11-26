@@ -5,6 +5,7 @@
 
 export { apiClient, ApiClient } from './api-client';
 export { usersService, UsersService } from './users.service';
+export { paymentService } from './payment.service';
 
 // Export types
 export type { ApiError } from './api-client';
@@ -13,3 +14,8 @@ export type {
   CreateUserRequest,
   UpdateUserRequest,
 } from './types/user.types';
+export type {
+  Payment,
+  StkPushRequest,
+  StkPushResponse,
+} from './types/payment.types';

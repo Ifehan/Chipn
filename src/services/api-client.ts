@@ -68,8 +68,25 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle 401 Unauthorized - clear auth and redirect to login
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('isAuthenticated');
+
+          // Only redirect if we're not already on the login page
+          if (window.location.pathname !== '/login') {
+            // Use assign for better compatibility, fallback to href
+            if (typeof window.location.assign === 'function') {
+              window.location.assign('/login');
+            } else {
+              window.location.href = '/login';
+            }
+          }
+        }
+
         const error: ApiError = {
-          message: errorData.message || `HTTP error! status: ${response.status}`,
+          message: errorData.message || errorData.detail || `HTTP error! status: ${response.status}`,
           status: response.status,
           details: errorData,
         };

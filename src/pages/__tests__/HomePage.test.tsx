@@ -2,12 +2,20 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import HomePage from '../HomePage';
+import { authService } from '../../services/auth.service';
 
 const mockNavigate = jest.fn();
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
+}));
+
+jest.mock('../../services/auth.service', () => ({
+  authService: {
+    isAuthenticated: jest.fn(),
+    getAccessToken: jest.fn(),
+  },
 }));
 
 // Mock child components
@@ -56,7 +64,50 @@ const renderHomePage = () => {
 describe('HomePage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    jest.clearAllMocks();
+    // Default to authenticated state
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
   });
+
+  describe('Authentication', () => {
+    it('redirects to login when user is not authenticated', () => {
+      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+
+      renderHomePage();
+
+      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    });
+
+    it('redirects to login when no token is present', () => {
+      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
+
+      renderHomePage();
+
+      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    });
+
+    it('redirects to login when both authentication and token are missing', () => {
+      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
+
+      renderHomePage();
+
+      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    });
+
+    it('does not redirect when user is authenticated with valid token', () => {
+      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+
+      renderHomePage();
+
+      expect(mockNavigate).not.toHaveBeenCalledWith('/login', { replace: true });
+    });
+  });
+
   it('renders without crashing', () => {
     renderHomePage();
     expect(screen.getByTestId('mock-header')).toBeInTheDocument();

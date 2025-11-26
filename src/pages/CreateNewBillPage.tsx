@@ -1,9 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft, DollarSign, LayoutGrid, Phone, Users, ContactRound, Calculator } from "lucide-react"
 import { SplitMethodSelector } from "../components/molecules/SplitMethodSelector"
+import { useSTKPush } from "../hooks/usePayment"
+import { useCurrentUser } from "../hooks/useUsers"
+import type { Payment } from "../services"
 
 export function CreateNewBillPage() {
   const navigate = useNavigate()
@@ -13,6 +16,23 @@ export function CreateNewBillPage() {
   const [splitMethod, setSplitMethod] = useState<"equal" | "percentage" | "custom">("equal")
   const [participants, setParticipants] = useState<string[]>([])
   const [phoneInput, setPhoneInput] = useState("")
+  const [currentUserPhone, setCurrentUserPhone] = useState<string>("")
+
+  const { initiateSTKPush, loading: stkLoading, error: stkError } = useSTKPush()
+  const { getCurrentUser, loading: userLoading } = useCurrentUser()
+
+  // Fetch current user's phone number on mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser()
+        setCurrentUserPhone(user.phone_number)
+      } catch (error) {
+        console.error("Failed to fetch current user:", error)
+      }
+    }
+    fetchCurrentUser()
+  }, [getCurrentUser])
 
   const handleAddParticipant = () => {
     if (phoneInput.trim()) {
@@ -21,12 +41,82 @@ export function CreateNewBillPage() {
     }
   }
 
-  const handleSendRequests = () => {
-    console.log("[v0] Bill details:", { billName, totalAmount, description, splitMethod, participants })
-    navigate("/home")
+  /**
+   * Normalize phone number to E.164 format (254XXXXXXXXX)
+   */
+  const normalizePhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters
+    let cleaned = phone.replace(/\D/g, '')
+
+    // Handle different formats
+    if (cleaned.startsWith('254')) {
+      return cleaned
+    } else if (cleaned.startsWith('0')) {
+      return '254' + cleaned.substring(1)
+    } else if (cleaned.length === 9) {
+      return '254' + cleaned
+    }
+
+    return cleaned
   }
 
-  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0
+  /**
+   * Calculate payment amounts based on split method
+   */
+  const calculatePayments = (): Payment[] => {
+    const total = parseFloat(totalAmount)
+    const allParticipants = [currentUserPhone, ...participants]
+
+    switch (splitMethod) {
+      case "equal": {
+        const amountPerPerson = Math.round((total / allParticipants.length) * 100) / 100
+        return allParticipants.map(phone => ({
+          amount: amountPerPerson,
+          phone_number: normalizePhoneNumber(phone)
+        }))
+      }
+      case "percentage": {
+        // For percentage split, divide equally for now
+        // In a real app, you'd have UI to set percentages
+        const amountPerPerson = Math.round((total / allParticipants.length) * 100) / 100
+        return allParticipants.map(phone => ({
+          amount: amountPerPerson,
+          phone_number: normalizePhoneNumber(phone)
+        }))
+      }
+      case "custom": {
+        // For custom split, divide equally for now
+        // In a real app, you'd have UI to set custom amounts
+        const amountPerPerson = Math.round((total / allParticipants.length) * 100) / 100
+        return allParticipants.map(phone => ({
+          amount: amountPerPerson,
+          phone_number: normalizePhoneNumber(phone)
+        }))
+      }
+      default:
+        return []
+    }
+  }
+
+  const handleSendRequests = async () => {
+    try {
+      const payments = calculatePayments()
+
+      await initiateSTKPush({
+        payments,
+        account_reference: billName || `Bill-${Date.now()}`,
+        transaction_desc: description || `Payment for ${billName}`
+      })
+
+      // Navigate to home on success
+      navigate("/home")
+    } catch (error) {
+      console.error("Failed to initiate STK Push:", error)
+      // Error is already handled by the hook
+    }
+  }
+
+  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0 && currentUserPhone
 
   return (
     <div className="app-shell bg-gray-50 min-h-screen">
@@ -166,16 +256,25 @@ export function CreateNewBillPage() {
           )}
         </div>
 
+        {/* Error Display */}
+        {stkError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-600">
+              {stkError.message || "Failed to initiate payment. Please try again."}
+            </p>
+          </div>
+        )}
+
         <button
           onClick={handleSendRequests}
-          disabled={!isFormValid}
-          className={`w-full bg-emerald-400 hover:bg-emerald-500 text-white py-3.5 px-4 rounded-xl font-semibold text-base transition-colors shadow-sm ${
-            isFormValid
+          disabled={!isFormValid || stkLoading || userLoading}
+          className={`w-full py-3.5 px-4 rounded-xl font-semibold text-base transition-colors shadow-sm ${
+            isFormValid && !stkLoading && !userLoading
               ? "bg-emerald-400 hover:bg-emerald-500 text-white cursor-pointer"
-              : "bg-emerald-400 text-gray-500 cursor-not-allowed"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
-          Send Payment Requests
+          {stkLoading ? "Processing..." : "Send Payment Requests"}
         </button>
       </div>
     </div>

@@ -19,6 +19,38 @@ test.describe('Bill Management', () => {
       });
     });
 
+    // Mock the current user API call
+    await page.route('**/users/me', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'user-123',
+          first_name: 'John',
+          last_name: 'Doe',
+          email: 'test@example.com',
+          phone_number: '254700000000',
+          id_type: 'national_id'
+        })
+      });
+    });
+
+    // Mock the STK Push API call
+    await page.route('**/mpesa/stk-push', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'STK Push initiated successfully',
+          checkout_request_id: 'ws_CO_123456789',
+          merchant_request_id: 'mr_123456789',
+          response_code: '0',
+          response_description: 'Success',
+          customer_message: 'Success. Request accepted for processing'
+        })
+      });
+    });
+
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
     await loginPage.login('test@example.com', 'password123');
@@ -209,6 +241,171 @@ test.describe('Bill Management', () => {
 
       // Should stay on create bill page
       await expect(page).toHaveURL('/create-bill');
+    });
+  });
+
+  test.describe('STK Push Integration', () => {
+    test('should initiate STK Push when creating a bill', async ({ page }) => {
+      await loginUser(page);
+
+      const createBillPage = new CreateBillPage(page);
+      await createBillPage.navigate();
+
+      // Track STK Push API call
+      let stkPushCalled = false;
+      let stkPushPayload: any = null;
+
+      await page.route('**/mpesa/stk-push', async (route) => {
+        stkPushCalled = true;
+        stkPushPayload = route.request().postDataJSON();
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'STK Push initiated successfully',
+            checkout_request_id: 'ws_CO_123456789',
+          })
+        });
+      });
+
+      // Create bill with participant
+      await createBillPage.createBill({
+        name: 'Test Bill',
+        amount: '300',
+        description: 'Test Description',
+        splitMethod: 'equal'
+      });
+
+      // Wait for navigation
+      await page.waitForURL('/home', { timeout: 5000 });
+
+      // Verify STK Push was called
+      expect(stkPushCalled).toBeTruthy();
+      expect(stkPushPayload).toBeTruthy();
+      expect(stkPushPayload.account_reference).toBe('Test Bill');
+      expect(stkPushPayload.transaction_desc).toBe('Test Description');
+      expect(stkPushPayload.payments).toHaveLength(2); // Current user + 1 participant
+    });
+
+    test('should handle STK Push errors gracefully', async ({ page }) => {
+      await loginUser(page);
+
+      const createBillPage = new CreateBillPage(page);
+      await createBillPage.navigate();
+
+      // Mock STK Push failure
+      await page.route('**/mpesa/stk-push', async (route) => {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Invalid phone number format'
+          })
+        });
+      });
+
+      // Create bill
+      await createBillPage.fillBillName('Test Bill');
+      await createBillPage.fillAmount('100');
+
+      const phoneInput = page.getByPlaceholder(/0712345678|\\+254712345678/i);
+      await phoneInput.fill('+254712345678');
+      const addButton = page.locator('button').filter({ hasText: '+' });
+      await addButton.click();
+
+      await createBillPage.clickCreate();
+
+      // Should stay on the page (not navigate on error)
+      await page.waitForTimeout(1000);
+      await expect(page).toHaveURL('/create-bill');
+    });
+
+    test('should calculate equal split correctly', async ({ page }) => {
+      await loginUser(page);
+
+      const createBillPage = new CreateBillPage(page);
+      await createBillPage.navigate();
+
+      let stkPushPayload: any = null;
+
+      await page.route('**/mpesa/stk-push', async (route) => {
+        stkPushPayload = route.request().postDataJSON();
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Success',
+          })
+        });
+      });
+
+      // Fill form
+      await createBillPage.fillBillName('Split Test');
+      await createBillPage.fillAmount('300');
+      await createBillPage.selectSplitMethod('equal');
+
+      // Add two participants
+      const phoneInput = page.getByPlaceholder(/0712345678|\\+254712345678/i);
+      const addButton = page.locator('button').filter({ hasText: '+' });
+
+      await phoneInput.fill('0712345678');
+      await addButton.click();
+
+      await phoneInput.fill('0798765432');
+      await addButton.click();
+
+      await createBillPage.clickCreate();
+
+      // Wait for API call
+      await page.waitForTimeout(500);
+
+      // Verify equal split: 300 / 3 = 100 each
+      expect(stkPushPayload.payments).toHaveLength(3);
+      expect(stkPushPayload.payments[0].amount).toBe(100);
+      expect(stkPushPayload.payments[1].amount).toBe(100);
+      expect(stkPushPayload.payments[2].amount).toBe(100);
+    });
+
+    test('should normalize phone numbers to E.164 format', async ({ page }) => {
+      await loginUser(page);
+
+      const createBillPage = new CreateBillPage(page);
+      await createBillPage.navigate();
+
+      let stkPushPayload: any = null;
+
+      await page.route('**/mpesa/stk-push', async (route) => {
+        stkPushPayload = route.request().postDataJSON();
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Success',
+          })
+        });
+      });
+
+      // Fill form
+      await createBillPage.fillBillName('Phone Test');
+      await createBillPage.fillAmount('200');
+
+      // Add participant with local format
+      const phoneInput = page.getByPlaceholder(/0712345678|\\+254712345678/i);
+      const addButton = page.locator('button').filter({ hasText: '+' });
+
+      await phoneInput.fill('0712345678'); // Local format
+      await addButton.click();
+
+      await createBillPage.clickCreate();
+
+      // Wait for API call
+      await page.waitForTimeout(500);
+
+      // Verify phone numbers are normalized to 254XXXXXXXXX format
+      expect(stkPushPayload.payments).toBeTruthy();
+      stkPushPayload.payments.forEach((payment: any) => {
+        expect(payment.phone_number).toMatch(/^254\d{9}$/);
+      });
     });
   });
 });

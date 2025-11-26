@@ -21,6 +21,13 @@ beforeAll(() => {
     ) {
       return;
     }
+
+    // Suppress jsdom navigation errors (expected in tests with window.location.assign)
+    const errorMessage = args[0]?.message || String(args[0]);
+    if (errorMessage.includes('Not implemented: navigation')) {
+      return;
+    }
+
     originalError.call(console, ...args);
   };
 

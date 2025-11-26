@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BackButton } from '../components/atoms/BackButton'
 import { ProfileCard } from '../components/molecules/ProfileCard'
 import { AccountSettingsSection } from '../components/organisms/AccountSettingsSection'
@@ -18,6 +19,7 @@ interface ProfileSettingsPageProps {
  * Route: /profile-settings
  */
 export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
+  const navigate = useNavigate()
   const { getCurrentUser, loading, error } = useCurrentUser()
   const [userData, setUserData] = useState({
     userName: '',
@@ -36,13 +38,18 @@ export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
           phoneNumber: user.phone_number,
           avatar: '', // Avatar can be added later if needed
         })
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch user data:', err)
+        // If it's a 401 error, the api-client will handle redirect
+        // For other errors, we'll show the error state
+        if (err?.status === 401) {
+          navigate('/login', { replace: true })
+        }
       }
     }
 
     fetchUserData()
-  }, [getCurrentUser])
+  }, [getCurrentUser, navigate])
 
   if (loading) {
     return (

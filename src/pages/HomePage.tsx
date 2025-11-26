@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { authService } from '../services/auth.service'
 import { Header } from '../components/molecules/Header'
 import { TabsContainer } from '../components/molecules/TabsContainer'
 import { StatsContainer } from '../components/molecules/StatsContainer'
@@ -10,6 +11,17 @@ import { GroupsContent } from '../components/organisms/GroupsContent'
 export function HomePage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'bills' | 'groups'>('bills')
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const isAuthenticated = authService.isAuthenticated()
+    const hasToken = authService.getAccessToken()
+
+    // Redirect to login if not authenticated or no token
+    if (!isAuthenticated || !hasToken) {
+      navigate('/login', { replace: true })
+    }
+  }, [navigate])
 
   return (
     <div className="app-shell">
