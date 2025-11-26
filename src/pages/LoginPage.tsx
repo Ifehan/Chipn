@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { AuthCard } from '../components/organisms/AuthCard'
 import { LoginForm } from '../components/molecules/LoginForm'
 import { useNavigate } from 'react-router-dom'
-import { authService } from '../services/auth.service'
+import { useAuth } from '../contexts/AuthContext'
 import type { ApiError } from '../services/api-client'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -15,7 +16,8 @@ export function LoginPage() {
     setError('')
 
     try {
-      await authService.login({ email, password })
+      // Use AuthContext login which handles both authentication and user data fetching
+      await login(email, password)
       navigate('/home')
     } catch (err) {
       const apiError = err as ApiError

@@ -350,7 +350,10 @@ docker run -p 80:80 tunga-pay:prod
 - `npm run test:e2e:debug` - Debug E2E tests
 - `npm run test:e2e:report` - View E2E test report
 
-See [`docs/unit-testing.md`](docs/unit-testing.md) for unit/integration testing and [`docs/e2e-testing.md`](docs/e2e-testing.md) for E2E testing documentation.
+**📖 Testing Documentation:**
+- **[Unit/Integration Testing Guide](docs/unit-testing.md)** - Comprehensive guide for Jest and React Testing Library
+- **[E2E Testing Guide](docs/e2e-testing.md)** - Complete Playwright testing documentation with troubleshooting
+- **[Documentation Index](docs/README.md)** - Full documentation overview
 
 ## 🧪 Testing
 
@@ -392,9 +395,24 @@ The project has comprehensive test coverage at multiple levels:
 - Trace recording for debugging
 - Parallel test execution
 
-### Documentation
-- [`docs/unit-testing.md`](docs/unit-testing.md) - Unit/Integration testing guide
-- [`docs/e2e-testing.md`](docs/e2e-testing.md) - E2E testing guide
+### Testing Documentation
+
+Comprehensive testing guides are available in the [`docs/`](docs/) directory:
+
+- **[Unit/Integration Testing Guide](docs/unit-testing.md)** - Jest and React Testing Library
+  - Component testing strategies
+  - Test utilities and custom renders
+  - Mocking patterns
+  - Coverage requirements
+
+- **[E2E Testing Guide](docs/e2e-testing.md)** - Playwright end-to-end testing
+  - Page Object Model architecture
+  - API mocking requirements (⚠️ **Important**: Login tests require both `/auth/login` AND `/users/me` mocks)
+  - Multi-browser testing
+  - Debugging and troubleshooting
+  - Common issues and solutions
+
+- **[Documentation Index](docs/README.md)** - Complete documentation overview
 
 ## 🎨 Styling
 
@@ -557,11 +575,30 @@ When contributing to this project, please:
 
 All documentation is organized in the [`docs/`](docs/) directory:
 
-- **[`docs/README.md`](docs/README.md)** - Documentation index and overview
-- **[`docs/unit-testing.md`](docs/unit-testing.md)** - Unit/Integration testing guide
-- **[`docs/e2e-testing.md`](docs/e2e-testing.md)** - E2E testing guide
+### Testing Documentation
+- **[Unit/Integration Testing Guide](docs/unit-testing.md)** - Complete guide for Jest and React Testing Library
+  - Component testing at all levels (atoms, molecules, organisms, pages)
+  - Custom test utilities and render functions
+  - Mocking strategies for APIs and browser features
+  - Coverage requirements and best practices
+
+- **[E2E Testing Guide](docs/e2e-testing.md)** - Comprehensive Playwright testing documentation
+  - Page Object Model architecture and patterns
+  - **API mocking requirements** (critical for authentication tests)
+  - Multi-browser and mobile testing
+  - Debugging tools and techniques
+  - Troubleshooting common issues
+
+### General Documentation
+- **[Documentation Index](docs/README.md)** - Complete documentation overview
 - **Component Documentation** - JSDoc comments in component files
-- **Type Definitions** - TypeScript interfaces and types
+- **Type Definitions** - TypeScript interfaces and types throughout the codebase
+
+### Quick Links
+- [Testing Overview](#-testing) - Summary of testing approach
+- [Getting Started](#-getting-started) - Installation and setup
+- [Available Scripts](#-available-scripts) - All npm commands
+- [Project Structure](#-project-structure) - Directory organization
 
 For a complete list of available documentation, see the [**Documentation Index**](docs/README.md).
 

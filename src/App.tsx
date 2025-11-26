@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { AuthProvider } from "./contexts/AuthContext"
 import { WelcomePage } from "./pages/WelcomePage"
 import { LoginPage } from "./pages/LoginPage"
 import { SignupPage } from "./pages/SignupPage"
@@ -12,7 +13,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute"
 export default function App() {
   return (
     <Router>
-      <Routes>
+      <AuthProvider>
+        <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -51,7 +53,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </Router>
   )
 }

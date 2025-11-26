@@ -1,38 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, DollarSign, LayoutGrid, Phone, Users, ContactRound, Calculator } from "lucide-react"
+import { ArrowLeft, DollarSign, Phone, Users, ContactRound, Calculator } from "lucide-react"
 import { SplitMethodSelector } from "../components/molecules/SplitMethodSelector"
 import { useSTKPush } from "../hooks/usePayment"
-import { useCurrentUser } from "../hooks/useUsers"
+import { useAuth } from "../contexts/AuthContext"
 import type { Payment } from "../services"
 
 export function CreateNewBillPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [billName, setBillName] = useState("")
   const [totalAmount, setTotalAmount] = useState("")
   const [description, setDescription] = useState("")
   const [splitMethod, setSplitMethod] = useState<"equal" | "percentage" | "custom">("equal")
   const [participants, setParticipants] = useState<string[]>([])
   const [phoneInput, setPhoneInput] = useState("")
-  const [currentUserPhone, setCurrentUserPhone] = useState<string>("")
 
   const { initiateSTKPush, loading: stkLoading, error: stkError } = useSTKPush()
-  const { getCurrentUser, loading: userLoading } = useCurrentUser()
 
-  // Fetch current user's phone number on mount
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const user = await getCurrentUser()
-        setCurrentUserPhone(user.phone_number)
-      } catch (error) {
-        console.error("Failed to fetch current user:", error)
-      }
-    }
-    fetchCurrentUser()
-  }, [getCurrentUser])
+  // Get current user's phone from context
+  const currentUserPhone = user?.phone_number || ""
 
   const handleAddParticipant = () => {
     if (phoneInput.trim()) {
@@ -116,7 +105,7 @@ export function CreateNewBillPage() {
     }
   }
 
-  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0 && currentUserPhone
+  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0 && currentUserPhone && user
 
   return (
     <div className="app-shell bg-gray-50 min-h-screen">
@@ -267,9 +256,9 @@ export function CreateNewBillPage() {
 
         <button
           onClick={handleSendRequests}
-          disabled={!isFormValid || stkLoading || userLoading}
+          disabled={!isFormValid || stkLoading}
           className={`w-full py-3.5 px-4 rounded-xl font-semibold text-base transition-colors shadow-sm ${
-            isFormValid && !stkLoading && !userLoading
+            isFormValid && !stkLoading
               ? "bg-emerald-400 hover:bg-emerald-500 text-white cursor-pointer"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}

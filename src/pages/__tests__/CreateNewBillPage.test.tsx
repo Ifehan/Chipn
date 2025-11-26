@@ -1,7 +1,13 @@
+// Mock the api-client to avoid import.meta issues
+jest.mock('../../services/api-client');
+
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '../../contexts/AuthContext';
 import userEvent from '@testing-library/user-event';
 import CreateNewBillPage from '../CreateNewBillPage';
+import { authService } from '../../services/auth.service';
+import { usersService } from '../../services/users.service';
 
 const mockNavigate = jest.fn();
 const mockInitiateSTKPush = jest.fn();
@@ -10,6 +16,20 @@ const mockGetCurrentUser = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
+}));
+
+jest.mock('../../services/auth.service', () => ({
+  authService: {
+    isAuthenticated: jest.fn(),
+    getAccessToken: jest.fn(),
+    logout: jest.fn(),
+  },
+}));
+
+jest.mock('../../services/users.service', () => ({
+  usersService: {
+    getCurrentUser: jest.fn(),
+  },
 }));
 
 // Mock payment hook
@@ -21,14 +41,8 @@ jest.mock('../../hooks/usePayment', () => ({
   }),
 }));
 
-// Mock users hook
-jest.mock('../../hooks/useUsers', () => ({
-  useCurrentUser: () => ({
-    getCurrentUser: mockGetCurrentUser,
-    loading: false,
-    error: null,
-  }),
-}));
+// Note: CreateNewBillPage uses useAuth() from AuthContext, not useCurrentUser hook
+// So we don't need to mock useCurrentUser
 
 // Mock child components
 jest.mock('../../components/molecules/SplitMethodSelector', () => ({
@@ -44,13 +58,15 @@ jest.mock('../../components/molecules/SplitMethodSelector', () => ({
 const renderCreateNewBillPage = async () => {
   const result = render(
     <BrowserRouter>
-      <CreateNewBillPage />
+      <AuthProvider>
+        <CreateNewBillPage />
+      </AuthProvider>
     </BrowserRouter>
   );
 
-  // Wait for the useEffect to complete
+  // Wait for AuthProvider to initialize
   await waitFor(() => {
-    expect(mockGetCurrentUser).toHaveBeenCalled();
+    expect(usersService.getCurrentUser).toHaveBeenCalled();
   });
 
   return result;
@@ -61,7 +77,14 @@ describe('CreateNewBillPage', () => {
     mockNavigate.mockClear();
     mockInitiateSTKPush.mockClear();
     mockGetCurrentUser.mockClear();
-    mockGetCurrentUser.mockResolvedValue({
+    jest.clearAllMocks();
+
+    // Mock auth service
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+
+    // Mock users service for AuthProvider
+    (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
       id: 'user-123',
       first_name: 'John',
       last_name: 'Doe',
@@ -69,6 +92,7 @@ describe('CreateNewBillPage', () => {
       phone_number: '254700000000',
       id_type: 'national_id',
     });
+
   });
 
   it('renders without crashing', async () => {
@@ -341,10 +365,10 @@ describe('CreateNewBillPage', () => {
   });
 
   describe('STK Push Integration', () => {
-    it('fetches current user on mount', async () => {
+    it('renders with user data from AuthContext', async () => {
       await renderCreateNewBillPage();
-      // getCurrentUser is already called in renderCreateNewBillPage
-      expect(mockGetCurrentUser).toHaveBeenCalled();
+      // User data comes from AuthContext, not from calling getCurrentUser
+      expect(screen.getByText('Create New Bill')).toBeInTheDocument();
     });
 
     it('calculates equal split correctly', async () => {
@@ -519,27 +543,22 @@ describe('CreateNewBillPage', () => {
   });
 
   describe('Error Handling', () => {
-    it('handles getCurrentUser error gracefully', async () => {
-      mockGetCurrentUser.mockRejectedValue(new Error('Failed to fetch user'));
-
-      // Suppress console.error for this test
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    it('renders page even if user data is not immediately available', async () => {
+      // Temporarily set user to null in AuthContext
+      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(null);
 
       render(
         <BrowserRouter>
-          <CreateNewBillPage />
+          <AuthProvider>
+            <CreateNewBillPage />
+          </AuthProvider>
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(mockGetCurrentUser).toHaveBeenCalled();
+        // Should still render the page structure
+        expect(screen.getByText('Create New Bill')).toBeInTheDocument();
       });
-
-      // Should still render the page
-      expect(screen.getByText('Create New Bill')).toBeInTheDocument();
-
-      consoleErrorSpy.mockRestore();
     });
-
   });
 });

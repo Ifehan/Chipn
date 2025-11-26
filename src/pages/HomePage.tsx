@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authService } from '../services/auth.service'
+import { useAuth } from '../contexts/AuthContext'
 import { Header } from '../components/molecules/Header'
 import { TabsContainer } from '../components/molecules/TabsContainer'
 import { StatsContainer } from '../components/molecules/StatsContainer'
@@ -10,26 +10,21 @@ import { GroupsContent } from '../components/organisms/GroupsContent'
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'bills' | 'groups'>('bills')
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const isAuthenticated = authService.isAuthenticated()
-    const hasToken = authService.getAccessToken()
-
-    // Redirect to login if not authenticated or no token
-    if (!isAuthenticated || !hasToken) {
-      navigate('/login', { replace: true })
-    }
-  }, [navigate])
+  // Get user display name and phone from context
+  const userName = user ? `${user.first_name} ${user.last_name}` : 'User'
+  const phoneNumber = user?.phone_number || ''
+  const avatar = user ? user.first_name.charAt(0).toUpperCase() : 'U'
 
   return (
     <div className="app-shell">
       <div className="px-4 pt-6 flex flex-col min-h-screen bg-gray-50">
         <Header
-          userName="test"
-          phoneNumber="+254710670537"
-          avatar="T"
+          userName={userName}
+          phoneNumber={phoneNumber}
+          avatar={avatar}
           onProfileClick={() => navigate('/profile')}
         />
 

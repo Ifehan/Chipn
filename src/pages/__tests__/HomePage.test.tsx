@@ -1,8 +1,13 @@
-import { render, screen } from '@testing-library/react';
+// Mock the api-client to avoid import.meta issues
+jest.mock('../../services/api-client');
+
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
+import { AuthProvider } from '../../contexts/AuthContext';
 import HomePage from '../HomePage';
 import { authService } from '../../services/auth.service';
+import { usersService } from '../../services/users.service';
 
 const mockNavigate = jest.fn();
 
@@ -15,6 +20,13 @@ jest.mock('../../services/auth.service', () => ({
   authService: {
     isAuthenticated: jest.fn(),
     getAccessToken: jest.fn(),
+    logout: jest.fn(),
+  },
+}));
+
+jest.mock('../../services/users.service', () => ({
+  usersService: {
+    getCurrentUser: jest.fn(),
   },
 }));
 
@@ -53,12 +65,23 @@ jest.mock('../../components/organisms/GroupsContent', () => ({
   GroupsContent: () => <div data-testid="mock-groups-content">Groups Content</div>,
 }));
 
-const renderHomePage = () => {
-  return render(
+const renderHomePage = async (waitForAuth = true) => {
+  const result = render(
     <BrowserRouter>
-      <HomePage />
+      <AuthProvider>
+        <HomePage />
+      </AuthProvider>
     </BrowserRouter>
   );
+
+  // Only wait for auth initialization if expected
+  if (waitForAuth) {
+    await waitFor(() => {
+      expect(usersService.getCurrentUser).toHaveBeenCalled();
+    });
+  }
+
+  return result;
 };
 
 describe('HomePage', () => {
@@ -68,53 +91,24 @@ describe('HomePage', () => {
     // Default to authenticated state
     (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
     (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-  });
-
-  describe('Authentication', () => {
-    it('redirects to login when user is not authenticated', () => {
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-
-      renderHomePage();
-
-      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
-    });
-
-    it('redirects to login when no token is present', () => {
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-
-      renderHomePage();
-
-      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
-    });
-
-    it('redirects to login when both authentication and token are missing', () => {
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-
-      renderHomePage();
-
-      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
-    });
-
-    it('does not redirect when user is authenticated with valid token', () => {
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-
-      renderHomePage();
-
-      expect(mockNavigate).not.toHaveBeenCalledWith('/login', { replace: true });
+    (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
+      id: 'user-123',
+      email: 'test@example.com',
+      first_name: 'Test',
+      last_name: 'User',
     });
   });
 
-  it('renders without crashing', () => {
-    renderHomePage();
+  // Note: Authentication redirect tests are in ProtectedRoute.test.tsx
+  // HomePage itself doesn't handle authentication - it's wrapped by ProtectedRoute in App.tsx
+
+  it('renders without crashing', async () => {
+    await renderHomePage();
     expect(screen.getByTestId('mock-header')).toBeInTheDocument();
   });
 
-  it('renders all main sections when bills tab is active', () => {
-    renderHomePage();
+  it('renders all main sections when bills tab is active', async () => {
+    await renderHomePage();
 
     expect(screen.getByTestId('mock-header')).toBeInTheDocument();
     expect(screen.getByTestId('mock-tabs-container')).toBeInTheDocument();
@@ -123,14 +117,14 @@ describe('HomePage', () => {
     expect(screen.getByTestId('mock-recent-bills')).toBeInTheDocument();
   });
 
-  it('starts with bills tab active by default', () => {
-    renderHomePage();
+  it('starts with bills tab active by default', async () => {
+    await renderHomePage();
     expect(screen.getByText('Active: bills')).toBeInTheDocument();
   });
 
   it('switches to groups tab when groups is clicked', async () => {
     const user = userEvent.setup();
-    renderHomePage();
+    await renderHomePage();
 
     const groupsButton = screen.getByText('Groups');
     await user.click(groupsButton);
@@ -141,7 +135,7 @@ describe('HomePage', () => {
 
   it('hides bills content when groups tab is active', async () => {
     const user = userEvent.setup();
-    renderHomePage();
+    await renderHomePage();
 
     const groupsButton = screen.getByText('Groups');
     await user.click(groupsButton);
@@ -153,7 +147,7 @@ describe('HomePage', () => {
 
   it('navigates to profile settings when profile is clicked', async () => {
     const user = userEvent.setup();
-    renderHomePage();
+    await renderHomePage();
 
     const profileButton = screen.getByText('Profile');
     await user.click(profileButton);
@@ -161,15 +155,15 @@ describe('HomePage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/profile');
   });
 
-  it('has correct layout structure', () => {
-    const { container } = renderHomePage();
+  it('has correct layout structure', async () => {
+    const { container } = await renderHomePage();
 
     const mainContainer = container.querySelector('.min-h-screen');
     expect(mainContainer).toBeInTheDocument();
   });
 
-  it('passes correct props to Header', () => {
-    renderHomePage();
+  it('passes correct props to Header', async () => {
+    await renderHomePage();
     expect(screen.getByTestId('mock-header')).toBeInTheDocument();
   });
 });

@@ -80,6 +80,22 @@ test.describe('Authentication Flow', () => {
         });
       });
 
+      // Mock the user info API call
+      await page.route('**/users/me', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'user-123',
+            first_name: 'Test',
+            last_name: 'User',
+            email: 'test@example.com',
+            phone_number: '+254712345678',
+            id_type: 'national_id'
+          })
+        });
+      });
+
       const loginPage = new LoginPage(page);
       await loginPage.navigate();
 
@@ -116,6 +132,22 @@ test.describe('Authentication Flow', () => {
             access_token: 'mock-jwt-token-12345',
             token_type: 'bearer',
             expires_in: 3600
+          })
+        });
+      });
+
+      // Mock the user info API call
+      await page.route('**/users/me', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'user-123',
+            first_name: 'Test',
+            last_name: 'User',
+            email: 'user@example.com',
+            phone_number: '+254712345678',
+            id_type: 'national_id'
           })
         });
       });

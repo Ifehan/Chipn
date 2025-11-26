@@ -7,6 +7,7 @@ jest.mock('../../services/auth.service');
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '../../contexts/AuthContext';
 import { LoginPage } from '../LoginPage';
 import { authService } from '../../services/auth.service';
 import type { LoginResponse } from '../../services/types/auth.types';
@@ -26,7 +27,9 @@ describe('LoginPage', () => {
   const renderLoginPage = () => {
     return render(
       <BrowserRouter>
-        <LoginPage />
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
       </BrowserRouter>
     );
   };

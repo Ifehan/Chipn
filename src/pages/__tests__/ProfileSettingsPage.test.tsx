@@ -1,7 +1,13 @@
+// Mock the api-client to avoid import.meta issues
+jest.mock('../../services/api-client');
+
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
+import { AuthProvider } from '../../contexts/AuthContext';
 import ProfileSettingsPage from '../ProfileSettingsPage';
+import { authService } from '../../services/auth.service';
+import { usersService } from '../../services/users.service';
 
 // Suppress act warnings for async state updates in useEffect
 const originalError = console.error;
@@ -24,13 +30,22 @@ afterAll(() => {
 
 const mockGetCurrentUser = jest.fn();
 
-jest.mock('../../hooks/useUsers', () => ({
-  useCurrentUser: () => ({
-    getCurrentUser: mockGetCurrentUser,
-    loading: false,
-    error: null,
-  }),
+jest.mock('../../services/auth.service', () => ({
+  authService: {
+    isAuthenticated: jest.fn(),
+    getAccessToken: jest.fn(),
+    logout: jest.fn(),
+  },
 }));
+
+jest.mock('../../services/users.service', () => ({
+  usersService: {
+    getCurrentUser: jest.fn(),
+  },
+}));
+
+// Note: ProfileSettingsPage uses useAuth() from AuthContext, not useCurrentUser hook
+// So we don't need to mock useCurrentUser
 
 // Mock child components
 jest.mock('../../components/atoms/BackButton', () => ({
@@ -92,7 +107,9 @@ const mockUserData = {
 const renderProfileSettingsPage = (props = {}) => {
   return render(
     <BrowserRouter>
-      <ProfileSettingsPage {...defaultProps} {...props} />
+      <AuthProvider>
+        <ProfileSettingsPage {...defaultProps} {...props} />
+      </AuthProvider>
     </BrowserRouter>
   );
 };
@@ -100,16 +117,21 @@ const renderProfileSettingsPage = (props = {}) => {
 describe('ProfileSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Mock auth service
+    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+
+    // Mock users service for AuthProvider
+    (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUserData);
+
+    // Mock getCurrentUser for the page's useEffect
     mockGetCurrentUser.mockResolvedValue(mockUserData);
   });
 
   it('renders without crashing', async () => {
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -120,10 +142,6 @@ describe('ProfileSettingsPage', () => {
   it('fetches and displays user data from API', async () => {
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -139,10 +157,6 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
       expect(screen.getByText('Profile & Settings')).toBeInTheDocument();
     });
   });
@@ -150,10 +164,6 @@ describe('ProfileSettingsPage', () => {
   it('renders BackButton component', async () => {
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -167,10 +177,6 @@ describe('ProfileSettingsPage', () => {
 
     await act(async () => {
       renderProfileSettingsPage({ onBack });
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -203,10 +209,6 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
       expect(screen.getByTestId('mock-account-settings')).toBeInTheDocument();
       expect(screen.getByTestId('mock-payment-settings')).toBeInTheDocument();
       expect(screen.getByTestId('mock-support-section')).toBeInTheDocument();
@@ -219,10 +221,6 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
       expect(screen.getByText(/Payment Settings - \+254712345678/)).toBeInTheDocument();
     });
   });
@@ -230,10 +228,6 @@ describe('ProfileSettingsPage', () => {
   it('renders app info section', async () => {
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -249,24 +243,30 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
       expect(screen.getByTestId('mock-logout-button')).toBeInTheDocument();
     });
   });
 
-  it('logs to console when logout is clicked', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  it('calls logout from AuthContext when logout button is clicked', async () => {
+    const mockLogout = jest.fn();
     const user = userEvent.setup();
+
+    // Mock AuthContext with custom logout function
+    jest.spyOn(require('../../contexts/AuthContext'), 'useAuth').mockReturnValue({
+      user: {
+        id: 'user123',
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john@example.com',
+        phone_number: '+254712345678',
+        id_type: 'passport',
+      },
+      loading: false,
+      logout: mockLogout,
+    });
 
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -276,8 +276,7 @@ describe('ProfileSettingsPage', () => {
     const logoutButton = screen.getByTestId('mock-logout-button');
     await user.click(logoutButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Logout clicked');
-    consoleSpy.mockRestore();
+    expect(mockLogout).toHaveBeenCalled();
   });
 
   it('has correct page layout', async () => {
@@ -289,63 +288,35 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
       const mainContainer = container!.querySelector('.app-shell');
       expect(mainContainer).toBeInTheDocument();
     });
   });
 
-  it('handles API errors gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    // Mock the hook to return an error state
-    jest.spyOn(require('../../hooks/useUsers'), 'useCurrentUser').mockReturnValue({
-      getCurrentUser: jest.fn().mockRejectedValue(new Error('Failed to fetch user')),
-      loading: false,
-      error: new Error('Failed to fetch user'),
-    });
-
-    await act(async () => {
-      renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load profile/i)).toBeInTheDocument();
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
   it('shows loading state while fetching user data', () => {
-    // Mock loading state
-    jest.spyOn(require('../../hooks/useUsers'), 'useCurrentUser').mockReturnValue({
-      getCurrentUser: mockGetCurrentUser,
+    // Mock AuthContext to return loading state
+    const mockUseAuth = jest.spyOn(require('../../contexts/AuthContext'), 'useAuth');
+    mockUseAuth.mockReturnValue({
+      user: null,
       loading: true,
       error: null,
+      isAuthenticated: false,
+      login: jest.fn(),
+      logout: jest.fn(),
+      refreshUser: jest.fn(),
     });
 
     renderProfileSettingsPage();
 
     expect(screen.getByText(/loading profile/i)).toBeInTheDocument();
+
+    // Restore the mock after this test
+    mockUseAuth.mockRestore();
   });
 
   it('renders components in correct order after loading', async () => {
-    // Reset the mock to default behavior
-    jest.spyOn(require('../../hooks/useUsers'), 'useCurrentUser').mockReturnValue({
-      getCurrentUser: mockGetCurrentUser,
-      loading: false,
-      error: null,
-    });
-
     await act(async () => {
       renderProfileSettingsPage();
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {
@@ -371,10 +342,6 @@ describe('ProfileSettingsPage', () => {
     await act(async () => {
       const result = renderProfileSettingsPage();
       container = result.container;
-    });
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalled();
     });
 
     await waitFor(() => {

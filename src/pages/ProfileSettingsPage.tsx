@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React from 'react'
 import { BackButton } from '../components/atoms/BackButton'
 import { ProfileCard } from '../components/molecules/ProfileCard'
 import { AccountSettingsSection } from '../components/organisms/AccountSettingsSection'
 import { PaymentSettingsSection } from '../components/organisms/PaymentSettingsSection'
 import { SupportSection } from '../components/organisms/SupportSection'
 import { LogoutButton } from '../components/molecules/LogoutButton'
-import { useCurrentUser } from '../hooks/useUsers'
+import { useAuth } from '../contexts/AuthContext'
 
 interface ProfileSettingsPageProps {
   onBack: () => void
@@ -14,42 +13,25 @@ interface ProfileSettingsPageProps {
 
 /**
  * Profile Settings Page
- * Uses GET /users/me to fetch current user information
+ * Uses user data from AuthContext (already fetched on login)
  * Uses PUT /users/{user_id} to update user information
  * Route: /profile-settings
  */
 export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
-  const navigate = useNavigate()
-  const { getCurrentUser, loading, error } = useCurrentUser()
-  const [userData, setUserData] = useState({
+  const { user, logout, loading } = useAuth()
+
+  // Prepare user data for display
+  const userData = user ? {
+    userName: `${user.first_name} ${user.last_name}`,
+    userEmail: user.email,
+    phoneNumber: user.phone_number,
+    avatar: user.first_name.charAt(0).toUpperCase(),
+  } : {
     userName: '',
     userEmail: '',
     phoneNumber: '',
     avatar: '',
-  })
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = await getCurrentUser()
-        setUserData({
-          userName: `${user.first_name} ${user.last_name}`,
-          userEmail: user.email,
-          phoneNumber: user.phone_number,
-          avatar: '', // Avatar can be added later if needed
-        })
-      } catch (err: any) {
-        console.error('Failed to fetch user data:', err)
-        // If it's a 401 error, the api-client will handle redirect
-        // For other errors, we'll show the error state
-        if (err?.status === 401) {
-          navigate('/login', { replace: true })
-        }
-      }
-    }
-
-    fetchUserData()
-  }, [getCurrentUser, navigate])
+  }
 
   if (loading) {
     return (
@@ -61,22 +43,6 @@ export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
           </div>
           <div className="text-center py-8">
             <p className="text-slate-600">Loading profile...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="app-shell overflow-y-auto bg-gray-50">
-        <div className="px-4 py-4 pb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <BackButton onClick={onBack} />
-            <h1 className="text-base font-semibold text-slate-900">Profile & Settings</h1>
-          </div>
-          <div className="text-center py-8">
-            <p className="text-red-600">Failed to load profile. Please try again.</p>
           </div>
         </div>
       </div>
@@ -117,7 +83,7 @@ export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
         </div>
 
         {/* Logout Button */}
-        <LogoutButton onClick={() => console.log('Logout clicked')} />
+        <LogoutButton onClick={logout} />
       </div>
     </div>
   )

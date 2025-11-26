@@ -428,30 +428,102 @@ jobs:
 
 ## Test Data Management
 
-### Mock Data
+### API Mocking
 
-Currently, the app uses mock data. Tests work with this mock data:
+The application requires mocking API endpoints for authentication and user data. **All login tests must mock both the login endpoint AND the user info endpoint** to complete the authentication flow successfully.
 
+#### Required API Mocks for Authentication
+
+When testing login flows, you must mock these endpoints:
+
+1. **Login Endpoint** (`/auth/login`):
 ```typescript
-// Login with any credentials (mock auth)
-await loginPage.login('test@example.com', 'password123');
-
-// Create bills (stored in memory)
-await createBillPage.createBill({
-  name: 'Test Bill',
-  amount: '100.00'
+await page.route('**/auth/login', async (route) => {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      access_token: 'mock-jwt-token-12345',
+      token_type: 'bearer',
+      expires_in: 3600
+    })
+  });
 });
 ```
 
-### Future: API Mocking
+2. **User Info Endpoint** (`/users/me`) - **REQUIRED**:
+```typescript
+await page.route('**/users/me', async (route) => {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: 'user-123',
+      first_name: 'Test',
+      last_name: 'User',
+      email: 'test@example.com',
+      phone_number: '+254712345678',
+      id_type: 'national_id'
+    })
+  });
+});
+```
 
-When backend is integrated, use MSW or Playwright's route mocking:
+**Why both are required:** After successful login, the [`AuthContext`](../src/contexts/AuthContext.tsx) automatically calls [`usersService.getCurrentUser()`](../src/services/users.service.ts) to fetch user data from `/users/me`. Without this mock, the authentication state won't complete properly, causing tests to fail or timeout.
+
+#### Complete Login Helper Example
 
 ```typescript
-await page.route('**/api/login', route => {
-  route.fulfill({
+async function loginUser(page: Page) {
+  // Mock the login API call
+  await page.route('**/auth/login', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'mock-jwt-token-12345',
+        token_type: 'bearer',
+        expires_in: 3600
+      })
+    });
+  });
+
+  // Mock the user info API call - REQUIRED!
+  await page.route('**/users/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'user-123',
+        first_name: 'Test',
+        last_name: 'User',
+        email: 'test@example.com',
+        phone_number: '+254712345678',
+        id_type: 'national_id'
+      })
+    });
+  });
+
+  const loginPage = new LoginPage(page);
+  await loginPage.navigate();
+  await loginPage.login('test@example.com', 'password123');
+  await page.waitForURL('/home', { timeout: 5000 });
+}
+```
+
+#### Other API Mocks
+
+For bill creation tests, also mock the M-PESA STK Push endpoint:
+
+```typescript
+await page.route('**/mpesa/stk-push', async (route) => {
+  await route.fulfill({
     status: 200,
-    body: JSON.stringify({ token: 'mock-token' })
+    contentType: 'application/json',
+    body: JSON.stringify({
+      message: 'STK Push initiated successfully',
+      checkout_request_id: 'ws_CO_123456789'
+    })
   });
 });
 ```
@@ -467,6 +539,50 @@ await page.route('**/api/login', route => {
 - Check if dev server is running
 - Verify baseURL in config
 - Use `page.waitForURL()` for navigation
+
+### Login Tests Failing
+
+**Problem**: Tests fail after login with "Expected URL to be /home but got /login" or timeout waiting for home page elements
+
+**Root Cause**: Missing `/users/me` API mock. The authentication flow requires both `/auth/login` AND `/users/me` endpoints to be mocked.
+
+**Solution**: Always mock both endpoints in login tests:
+```typescript
+// Mock login endpoint
+await page.route('**/auth/login', async (route) => {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      access_token: 'mock-jwt-token-12345',
+      token_type: 'bearer',
+      expires_in: 3600
+    })
+  });
+});
+
+// Mock user info endpoint - REQUIRED!
+await page.route('**/users/me', async (route) => {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: 'user-123',
+      first_name: 'Test',
+      last_name: 'User',
+      email: 'test@example.com',
+      phone_number: '+254712345678',
+      id_type: 'national_id'
+    })
+  });
+});
+```
+
+**Related Files**:
+- [`src/contexts/AuthContext.tsx`](../src/contexts/AuthContext.tsx) - Calls `fetchCurrentUser()` after login
+- [`src/services/users.service.ts`](../src/services/users.service.ts) - Defines `/users/me` endpoint
+- [`e2e/auth.spec.ts`](../e2e/auth.spec.ts) - Authentication test examples
+- [`e2e/navigation.spec.ts`](../e2e/navigation.spec.ts) - Navigation test examples with login helper
 
 ### Element Not Found
 
@@ -497,6 +613,38 @@ await page.route('**/api/login', route => {
 npx playwright install chromium
 # or install all browsers
 npx playwright install
+```
+
+### Authentication State Not Persisting
+
+**Problem**: After page refresh, user is redirected to login
+
+**Root Cause**: The authentication state relies on both `localStorage` (for token) and `sessionStorage` (for auth flag). Page refresh may clear sessionStorage in tests.
+
+**Solution**: Re-mock the `/users/me` endpoint after refresh to allow the auth context to re-fetch user data:
+```typescript
+test('should handle browser refresh', async ({ page }) => {
+  await loginUser(page); // Initial login with mocks
+
+  // Re-mock user endpoint before refresh
+  await page.route('**/users/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'user-123',
+        first_name: 'Test',
+        last_name: 'User',
+        email: 'test@example.com',
+        phone_number: '+254712345678',
+        id_type: 'national_id'
+      })
+    });
+  });
+
+  await page.reload();
+  await expect(page).toHaveURL('/home');
+});
 ```
 
 ## Comparison: Unit vs E2E Tests
