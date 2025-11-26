@@ -124,7 +124,7 @@ class ApiClient {
 
           // Only redirect if we're not already on the login page
           if (window.location.pathname !== '/login') {
-            // Use assign for testing compatibility
+            // Use assign for better compatibility, fallback to href
             if (typeof window.location.assign === 'function') {
               window.location.assign('/login');
             } else {

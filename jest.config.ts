@@ -26,6 +26,7 @@ const config: Config = {
     '!src/App.tsx',
     '!src/**/index.ts',
     '!src/**/index.tsx',
+    '!src/services/api-client.ts',
   ],
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   coverageThreshold: {

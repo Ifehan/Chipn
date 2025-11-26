@@ -517,4 +517,29 @@ describe('CreateNewBillPage', () => {
       });
     });
   });
+
+  describe('Error Handling', () => {
+    it('handles getCurrentUser error gracefully', async () => {
+      mockGetCurrentUser.mockRejectedValue(new Error('Failed to fetch user'));
+
+      // Suppress console.error for this test
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      render(
+        <BrowserRouter>
+          <CreateNewBillPage />
+        </BrowserRouter>
+      );
+
+      await waitFor(() => {
+        expect(mockGetCurrentUser).toHaveBeenCalled();
+      });
+
+      // Should still render the page
+      expect(screen.getByText('Create New Bill')).toBeInTheDocument();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+  });
 });
