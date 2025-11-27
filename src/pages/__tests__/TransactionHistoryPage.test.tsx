@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import TransactionHistoryPage from '../TransactionHistoryPage';
+import type { TransactionHistoryResponse } from '../../services/types/payment.types';
 
 const mockNavigate = jest.fn();
 
@@ -19,6 +20,61 @@ jest.mock('../../components/atoms/BackButton', () => ({
   ),
 }));
 
+// Mock the useTransactionHistory hook
+const mockUseTransactionHistory = jest.fn();
+jest.mock('../../hooks/useTransactionHistory', () => ({
+  useTransactionHistory: () => mockUseTransactionHistory(),
+}));
+
+const mockTransactionResponse: TransactionHistoryResponse = {
+  transactions: [
+    {
+      id: '1',
+      merchant_request_id: 'merchant_123',
+      checkout_request_id: 'checkout_123',
+      phone_number: '254712345678',
+      amount: 1000,
+      account_reference: 'INV001',
+      transaction_desc: 'Payment for goods',
+      mpesa_receipt_number: 'ABC123XYZ',
+      transaction_date: '2025-11-27T10:00:00Z',
+      status: 'completed',
+      callback_url: null,
+      callback_received: '2025-11-27T10:01:00Z',
+      result_code: '0',
+      result_desc: 'Success',
+      error_message: null,
+      created_at: '2025-11-27T09:59:00Z',
+      updated_at: '2025-11-27T10:01:00Z',
+      user_id: 'user_123',
+    },
+    {
+      id: '2',
+      merchant_request_id: 'merchant_456',
+      checkout_request_id: 'checkout_456',
+      phone_number: '254798765432',
+      amount: 500,
+      account_reference: 'INV002',
+      transaction_desc: 'Service payment',
+      mpesa_receipt_number: null,
+      transaction_date: null,
+      status: 'pending',
+      callback_url: null,
+      callback_received: null,
+      result_code: null,
+      result_desc: null,
+      error_message: null,
+      created_at: '2025-11-27T11:00:00Z',
+      updated_at: '2025-11-27T11:00:00Z',
+      user_id: 'user_123',
+    },
+  ],
+  total: 2,
+  page: 1,
+  page_size: 50,
+  status_filter: 'all',
+};
+
 const renderTransactionHistoryPage = () => {
   return render(
     <BrowserRouter>
@@ -30,6 +86,16 @@ const renderTransactionHistoryPage = () => {
 describe('TransactionHistoryPage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
   });
 
   it('renders without crashing', () => {
@@ -59,7 +125,7 @@ describe('TransactionHistoryPage', () => {
 
   it('renders search input', () => {
     renderTransactionHistoryPage();
-    const searchInput = screen.getByPlaceholderText('Search bills...');
+    const searchInput = screen.getByPlaceholderText('Search transactions...');
     expect(searchInput).toBeInTheDocument();
     expect(searchInput).toHaveAttribute('type', 'text');
   });
@@ -68,10 +134,10 @@ describe('TransactionHistoryPage', () => {
     const user = userEvent.setup();
     renderTransactionHistoryPage();
 
-    const searchInput = screen.getByPlaceholderText('Search bills...');
-    await user.type(searchInput, 'Lunch');
+    const searchInput = screen.getByPlaceholderText('Search transactions...');
+    await user.type(searchInput, 'INV001');
 
-    expect(searchInput).toHaveValue('Lunch');
+    expect(searchInput).toHaveValue('INV001');
   });
 
   it('renders all tab buttons', () => {
@@ -109,108 +175,215 @@ describe('TransactionHistoryPage', () => {
     expect(completedTab).toHaveClass('bg-black', 'text-white');
   });
 
-  it('displays count badges for each tab', () => {
+  it('renders empty state when no transactions', () => {
     renderTransactionHistoryPage();
 
-    // All tabs should have count of 0
-    const countBadges = screen.getAllByText('0');
-    expect(countBadges).toHaveLength(3);
+    expect(screen.getByText('No transactions yet')).toBeInTheDocument();
+    expect(screen.getByText('Your transaction history will appear here')).toBeInTheDocument();
   });
 
-  it('renders empty state', () => {
+  it('displays loading state', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: true,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderTransactionHistoryPage();
+    expect(screen.getByText('Loading transactions...')).toBeInTheDocument();
+  });
+
+  it('displays error state', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: 'Network error',
+      refetch: jest.fn(),
+    });
+
+    renderTransactionHistoryPage();
+    expect(screen.getByText('Error Loading Transactions')).toBeInTheDocument();
+    expect(screen.getByText('Network error')).toBeInTheDocument();
+  });
+
+  it('displays transactions when loaded', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
     renderTransactionHistoryPage();
 
-    expect(screen.getByText('No bills yet')).toBeInTheDocument();
-    expect(screen.getByText('Create your first bill to get started')).toBeInTheDocument();
+    expect(screen.getByText('INV001')).toBeInTheDocument();
+    expect(screen.getByText('INV002')).toBeInTheDocument();
+    expect(screen.getByText('Payment for goods')).toBeInTheDocument();
+    expect(screen.getByText('Service payment')).toBeInTheDocument();
   });
 
-  it('has correct page layout', () => {
-    const { container } = renderTransactionHistoryPage();
-
-    const mainContainer = container.querySelector('.app-shell');
-    expect(mainContainer).toBeInTheDocument();
-  });
-
-  it('renders header with correct styling', () => {
-    const { container } = renderTransactionHistoryPage();
-
-    const header = container.querySelector('.bg-white.border-b');
-    expect(header).toBeInTheDocument();
-  });
-
-  it('renders search icon in search input', () => {
-    const { container } = renderTransactionHistoryPage();
-
-    // Check for search icon (lucide-react Search component)
-    const searchContainer = container.querySelector('.relative');
-    expect(searchContainer).toBeInTheDocument();
-  });
-
-  it('applies correct styling to active tab', async () => {
+  it('filters transactions by search query', async () => {
     const user = userEvent.setup();
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
     renderTransactionHistoryPage();
 
-    const pendingTab = screen.getByText('Pending').closest('button');
-    await user.click(pendingTab!);
+    const searchInput = screen.getByPlaceholderText('Search transactions...');
+    await user.type(searchInput, 'INV001');
 
-    expect(pendingTab).toHaveClass('bg-black');
-    expect(pendingTab).toHaveClass('text-white');
+    // INV001 should be visible
+    expect(screen.getByText('INV001')).toBeInTheDocument();
+    // INV002 should not be visible (filtered out)
+    expect(screen.queryByText('INV002')).not.toBeInTheDocument();
   });
 
-  it('applies correct styling to inactive tabs', () => {
+  it('displays status badges correctly', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
     renderTransactionHistoryPage();
 
-    const pendingTab = screen.getByText('Pending').closest('button');
-    const completedTab = screen.getByText('Completed').closest('button');
+    // Check for status badges in transaction cards (not tabs)
+    const statusBadges = screen.getAllByText('Completed');
+    expect(statusBadges.length).toBeGreaterThan(0);
 
-    expect(pendingTab).toHaveClass('bg-white');
-    expect(completedTab).toHaveClass('bg-white');
+    const pendingBadges = screen.getAllByText('Pending');
+    expect(pendingBadges.length).toBeGreaterThan(0);
   });
 
-  it('renders empty state with icon', () => {
-    const { container } = renderTransactionHistoryPage();
+  it('displays M-Pesa receipt number when available', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
 
-    // Check for DollarSign icon in empty state
-    const emptyState = container.querySelector('.flex.flex-col.items-center');
-    expect(emptyState).toBeInTheDocument();
+    renderTransactionHistoryPage();
+
+    expect(screen.getByText(/Receipt: ABC123XYZ/)).toBeInTheDocument();
   });
 
-  it('clears search query when cleared', async () => {
+  it('formats amount correctly', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderTransactionHistoryPage();
+
+    // Check for formatted amounts (KES currency format)
+    expect(screen.getByText(/1,000/)).toBeInTheDocument();
+    expect(screen.getByText(/500/)).toBeInTheDocument();
+  });
+
+  it('displays phone numbers', () => {
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderTransactionHistoryPage();
+
+    expect(screen.getByText('254712345678')).toBeInTheDocument();
+    expect(screen.getByText('254798765432')).toBeInTheDocument();
+  });
+
+  it('shows empty state when search has no results', async () => {
     const user = userEvent.setup();
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
     renderTransactionHistoryPage();
 
-    const searchInput = screen.getByPlaceholderText('Search bills...');
-    await user.type(searchInput, 'Test');
-    expect(searchInput).toHaveValue('Test');
+    const searchInput = screen.getByPlaceholderText('Search transactions...');
+    await user.type(searchInput, 'NonExistentTransaction');
 
-    await user.clear(searchInput);
-    expect(searchInput).toHaveValue('');
+    expect(screen.getByText('No matching transactions')).toBeInTheDocument();
+    expect(screen.getByText('Try adjusting your search query')).toBeInTheDocument();
   });
 
   it('maintains tab state when searching', async () => {
     const user = userEvent.setup();
+    mockUseTransactionHistory.mockReturnValue({
+      transactions: mockTransactionResponse.transactions,
+      total: 2,
+      page: 1,
+      pageSize: 50,
+      statusFilter: 'all',
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
     renderTransactionHistoryPage();
 
-    // Switch to pending tab
-    const pendingTab = screen.getByText('Pending').closest('button');
-    await user.click(pendingTab!);
+    // Switch to pending tab - get all elements and find the button (tab)
+    const pendingElements = screen.getAllByText('Pending');
+    const pendingTab = pendingElements.find(el => el.closest('button')?.classList.contains('rounded-full'));
+    const pendingButton = pendingTab?.closest('button');
+
+    await user.click(pendingButton!);
 
     // Type in search
-    const searchInput = screen.getByPlaceholderText('Search bills...');
+    const searchInput = screen.getByPlaceholderText('Search transactions...');
     await user.type(searchInput, 'Test');
 
     // Pending tab should still be active
-    expect(pendingTab).toHaveClass('bg-black', 'text-white');
-  });
-
-  it('renders all tabs with correct structure', () => {
-    renderTransactionHistoryPage();
-
-    const tabs = ['All', 'Pending', 'Completed'];
-    tabs.forEach(tabLabel => {
-      const tab = screen.getByText(tabLabel).closest('button');
-      expect(tab).toBeInTheDocument();
-      expect(tab).toHaveClass('rounded-full');
-    });
+    expect(pendingButton).toHaveClass('bg-black', 'text-white');
   });
 });
