@@ -12,14 +12,30 @@ describe('StatsContainer', () => {
     expect(screen.getByText('Collected')).toBeInTheDocument();
   });
 
-  it('displays pending amount', () => {
+  it('displays default amounts when no props provided', () => {
     render(<StatsContainer />);
     const amounts = screen.getAllByText('KSh 0');
-    expect(amounts.length).toBeGreaterThanOrEqual(1);
+    expect(amounts).toHaveLength(2);
   });
 
-  it('displays collected amount', () => {
-    render(<StatsContainer />);
+  it('displays pending amount from props', () => {
+    render(<StatsContainer pendingTotal={1500} completedTotal={0} />);
+    expect(screen.getByText('KSh 1,500')).toBeInTheDocument();
+  });
+
+  it('displays completed amount from props', () => {
+    render(<StatsContainer pendingTotal={0} completedTotal={2500} />);
+    expect(screen.getByText('KSh 2,500')).toBeInTheDocument();
+  });
+
+  it('displays both amounts with proper formatting', () => {
+    render(<StatsContainer pendingTotal={12345} completedTotal={67890} />);
+    expect(screen.getByText('KSh 12,345')).toBeInTheDocument();
+    expect(screen.getByText('KSh 67,890')).toBeInTheDocument();
+  });
+
+  it('handles zero values correctly', () => {
+    render(<StatsContainer pendingTotal={0} completedTotal={0} />);
     const amounts = screen.getAllByText('KSh 0');
     expect(amounts).toHaveLength(2);
   });

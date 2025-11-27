@@ -11,6 +11,10 @@ Welcome to the Tunga Pay documentation! This directory contains comprehensive gu
 - **[Architecture Guide](architecture.md)** - Component architecture and design patterns
 - **[Contributing Guide](contributing.md)** - How to contribute to the project
 
+### Feature Documentation
+- **[Transaction History](transaction-history.md)** - Complete guide to the transaction history feature
+- **[Authentication](authentication.md)** - Authentication system documentation
+
 ### Testing Documentation
 - **[Unit & Integration Testing](unit-testing.md)** - Jest and React Testing Library guide
 - **[E2E Testing](e2e-testing.md)** - Playwright end-to-end testing guide
@@ -26,10 +30,10 @@ Welcome to the Tunga Pay documentation! This directory contains comprehensive gu
 Tunga Pay uses a comprehensive testing strategy with multiple layers:
 
 ### Unit & Integration Tests (Jest + RTL)
-- **Location**: `src/components/**/__tests__/`, `src/services/**/__tests__/`, `src/pages/**/__tests__/`
-- **Coverage**: 38 test files covering services, components (atoms, molecules, organisms), and pages
-- **Test Suites**: 38 (all passing)
-- **Total Tests**: 477 (all passing)
+- **Location**: `src/components/**/__tests__/`, `src/services/**/__tests__/`, `src/pages/**/__tests__/`, `src/hooks/**/__tests__/`
+- **Coverage**: 40 test files covering services, components (atoms, molecules, organisms), pages, and hooks
+- **Test Suites**: 40 (all passing)
+- **Total Tests**: 503 (all passing)
 - **Coverage**: High coverage across all layers with comprehensive mocking strategy
 - **Documentation**: [`unit-testing.md`](unit-testing.md)
 - **Run**: `npm test`
@@ -173,6 +177,46 @@ Recommended patterns
 
 ---
 
+
+## 📋 Recent Changes
+
+### 2025-11-27: Transaction History Feature
+- ✅ Implemented complete transaction history with API integration
+- ✅ Added GET /mpesa/transactions endpoint support with filtering and pagination
+- ✅ Created useTransactionHistory custom hook for data fetching
+- ✅ Enhanced TransactionHistoryPage with real-time data display
+- ✅ Added status badges (Completed, Pending, Failed) with icons
+- ✅ Implemented client-side search across multiple fields
+- ✅ Added pagination controls (Previous/Next with page indicators)
+- ✅ Display formatted amounts in KES currency
+- ✅ Show M-Pesa receipt numbers and transaction dates
+- ✅ Handle loading, error, and empty states
+- ✅ Added comprehensive test coverage (26 new tests, all passing)
+
+**New Files:**
+- `src/hooks/useTransactionHistory.ts` - Custom hook for transaction data
+- `src/hooks/__tests__/useTransactionHistory.test.ts` - Hook tests
+
+**Files Modified:**
+- `src/services/types/payment.types.ts` - Updated Transaction and TransactionHistoryResponse types
+- `src/services/payment.service.ts` - Added getTransactionHistory method
+- `src/pages/TransactionHistoryPage.tsx` - Complete UI overhaul with real data
+- `src/pages/__tests__/TransactionHistoryPage.test.tsx` - Updated tests
+- `src/services/README.md` - Added payment service documentation
+- `docs/README.md` - Updated test statistics
+
+**Features:**
+- Status filtering (all/pending/completed) via query parameters
+- Pagination support (page & page_size parameters)
+- Client-side search across account reference, phone number, receipt number, and description
+- Responsive status badges with appropriate colors and icons
+- Currency and date formatting
+- Stable dependency management to prevent unnecessary re-renders
+
+**Test Statistics:**
+- 2 new test suites (all passing)
+- 26 new tests (all passing)
+- 100% coverage on useTransactionHistory hook and TransactionHistoryPage
 
 ### 2025-11-22: Test Infrastructure Improvements
 - ✅ Fixed all failing unit tests (38/38 suites passing, 477/477 tests passing)

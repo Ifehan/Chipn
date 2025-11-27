@@ -18,6 +18,10 @@ export function HomePage() {
   const phoneNumber = user?.phone_number || ''
   const avatar = user ? user.first_name.charAt(0).toUpperCase() : 'U'
 
+  // Get transaction totals from user data
+  const pendingTotal = user?.pending_transactions_total || 0
+  const completedTotal = user?.completed_transactions_total || 0
+
   return (
     <div className="app-shell">
       <div className="px-4 pt-6 flex flex-col min-h-screen bg-gray-50">
@@ -33,7 +37,10 @@ export function HomePage() {
         <div className="flex-1 overflow-y-auto pb-8">
           {activeTab === 'bills' ? (
             <div className="transition-opacity duration-300">
-              <StatsContainer />
+              <StatsContainer
+                pendingTotal={pendingTotal}
+                completedTotal={completedTotal}
+              />
               <QuickActions />
               <RecentBillsSection />
             </div>

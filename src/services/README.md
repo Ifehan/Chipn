@@ -10,8 +10,12 @@ The services layer provides a clean, type-safe interface for making API requests
 src/services/
 ├── api-client.ts          # Base HTTP client with common functionality
 ├── users.service.ts       # User-specific API operations
+├── auth.service.ts        # Authentication API operations
+├── payment.service.ts     # M-Pesa payment and transaction operations
 ├── types/
-│   └── user.types.ts      # User-related TypeScript types
+│   ├── user.types.ts      # User-related TypeScript types
+│   ├── auth.types.ts      # Authentication TypeScript types
+│   └── payment.types.ts   # Payment and transaction TypeScript types
 └── index.ts               # Barrel export for easy imports
 ```
 
@@ -108,6 +112,77 @@ VITE_API_BASE_URL=http://localhost:8000
   "id": "string",
   "created_at": "string",
   "updated_at": "string"
+}
+```
+
+### Payment Service
+
+#### POST /mpesa/stk-push - Initiate STK Push
+**Used on:** Create New Bill page (`/create-bill`)
+
+**Request Body:**
+```json
+{
+  "payments": [
+    {
+      "amount": 100,
+      "phone_number": "254712345678"
+    }
+  ],
+  "account_reference": "Invoice123",
+  "transaction_desc": "Payment for goods"
+}
+```
+
+**Response Body:**
+```json
+{
+  "message": "string",
+  "checkout_request_id": "string",
+  "merchant_request_id": "string",
+  "response_code": "string",
+  "response_description": "string",
+  "customer_message": "string"
+}
+```
+
+#### GET /mpesa/transactions - Get Transaction History
+**Used on:** Transaction History page (`/transaction-history`)
+
+**Query Parameters:**
+- `status`: Filter by status (`pending`, `completed`, `all`)
+- `page`: Page number (default: 1)
+- `page_size`: Items per page (default: 50, max: 100)
+
+**Response Body:**
+```json
+{
+  "transactions": [
+    {
+      "id": "string",
+      "merchant_request_id": "string",
+      "checkout_request_id": "string",
+      "phone_number": "string",
+      "amount": 0,
+      "account_reference": "string",
+      "transaction_desc": "string",
+      "mpesa_receipt_number": "string",
+      "transaction_date": "2025-11-27T13:44:06.618Z",
+      "status": "string",
+      "callback_url": "string",
+      "callback_received": "2025-11-27T13:44:06.619Z",
+      "result_code": "string",
+      "result_desc": "string",
+      "error_message": "string",
+      "created_at": "2025-11-27T13:44:06.619Z",
+      "updated_at": "2025-11-27T13:44:06.619Z",
+      "user_id": "string"
+    }
+  ],
+  "total": 0,
+  "page": 0,
+  "page_size": 0,
+  "status_filter": "string"
 }
 ```
 
@@ -218,6 +293,88 @@ function ProfileSettingsPage() {
 }
 ```
 
+### 4. In Transaction History Page
+
+```typescript
+import { useTransactionHistory } from '@/hooks/useTransactionHistory';
+import { useState } from 'react';
+
+function TransactionHistoryPage() {
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'completed'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { transactions, total, isLoading, error } = useTransactionHistory({
+    status: activeTab,
+    page: currentPage,
+    page_size: 20,
+  });
+
+  if (isLoading) return <div>Loading transactions...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      {/* Tab buttons */}
+      <button onClick={() => setActiveTab('all')}>All ({total})</button>
+      <button onClick={() => setActiveTab('pending')}>Pending</button>
+      <button onClick={() => setActiveTab('completed')}>Completed</button>
+
+      {/* Transaction list */}
+      {transactions.map(transaction => (
+        <div key={transaction.id}>
+          <h3>{transaction.account_reference}</h3>
+          <p>{transaction.amount} KES</p>
+          <p>Status: {transaction.status}</p>
+          {transaction.mpesa_receipt_number && (
+            <p>Receipt: {transaction.mpesa_receipt_number}</p>
+          )}
+        </div>
+      ))}
+
+      {/* Pagination */}
+      <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+        Previous
+      </button>
+      <button onClick={() => setCurrentPage(p => p + 1)}>
+        Next
+      </button>
+    </div>
+  );
+}
+```
+
+### 5. Initiating M-Pesa Payment
+
+```typescript
+import { usePayment } from '@/hooks/usePayment';
+
+function CreateBillPage() {
+  const { initiatePayment, loading, error } = usePayment();
+
+  const handlePayment = async () => {
+    try {
+      const response = await initiatePayment({
+        payments: [
+          { amount: 100, phone_number: '254712345678' },
+          { amount: 200, phone_number: '254798765432' }
+        ],
+        account_reference: 'INV001',
+        transaction_desc: 'Payment for services'
+      });
+      console.log('Payment initiated:', response);
+    } catch (err) {
+      console.error('Payment failed:', err);
+    }
+  };
+
+  return (
+    <button onClick={handlePayment} disabled={loading}>
+      {loading ? 'Processing...' : 'Pay with M-Pesa'}
+    </button>
+  );
+}
+```
+
 ## Type Definitions
 
 ### User Types
@@ -252,6 +409,70 @@ interface UpdateUserRequest {
   email?: string;
   phone_number?: string;
   id_type?: string;
+}
+
+### Payment Types
+
+```typescript
+// Individual payment in STK Push request
+interface Payment {
+  amount: number;
+  phone_number: string;
+}
+
+// STK Push request
+interface StkPushRequest {
+  payments: Payment[];
+  account_reference: string;
+  transaction_desc: string;
+}
+
+// STK Push response
+interface StkPushResponse {
+  message: string;
+  checkout_request_id?: string;
+  merchant_request_id?: string;
+  response_code?: string;
+  response_description?: string;
+  customer_message?: string;
+}
+
+// Transaction entity
+interface Transaction {
+  id: string;
+  merchant_request_id: string;
+  checkout_request_id: string;
+  phone_number: string;
+  amount: number;
+  account_reference: string;
+  transaction_desc: string;
+  mpesa_receipt_number: string | null;
+  transaction_date: string | null;
+  status: string;
+  callback_url: string | null;
+  callback_received: string | null;
+  result_code: string | null;
+  result_desc: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
+
+// Transaction history query parameters
+interface TransactionHistoryParams {
+  status?: 'pending' | 'completed' | 'all';
+  page?: number;
+  page_size?: number;
+}
+
+// Transaction history response
+interface TransactionHistoryResponse {
+  transactions: Transaction[];
+  total: number;
+  page: number;
+  page_size: number;
+  status_filter: string;
 }
 ```
 

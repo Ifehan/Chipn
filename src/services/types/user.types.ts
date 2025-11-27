@@ -16,6 +16,8 @@ export interface User {
   id_type: string;
   created_at?: string;
   updated_at?: string;
+  pending_transactions_total?: number;
+  completed_transactions_total?: number;
 }
 
 /**
