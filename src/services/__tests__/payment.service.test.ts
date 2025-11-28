@@ -23,6 +23,7 @@ describe('PaymentService', () => {
       ],
       account_reference: 'Invoice123',
       transaction_desc: 'Payment for goods',
+      vendor_id: 'vendor-123',
     };
 
     const mockResponse: StkPushResponse = {
@@ -86,6 +87,7 @@ describe('PaymentService', () => {
         ]),
         account_reference: expect.any(String),
         transaction_desc: expect.any(String),
+        vendor_id: expect.any(String),
       });
     });
 
@@ -94,6 +96,7 @@ describe('PaymentService', () => {
         payments: [{ amount: 500, phone_number: '254712345678' }],
         account_reference: 'Bill-001',
         transaction_desc: 'Dinner payment',
+        vendor_id: 'vendor-456',
       };
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
@@ -112,6 +115,7 @@ describe('PaymentService', () => {
         payments: [{ amount: 100, phone_number: '254712345678' }],
         account_reference: 'Invoice123',
         transaction_desc: '',
+        vendor_id: 'vendor-789',
       };
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
@@ -129,6 +133,7 @@ describe('PaymentService', () => {
         payments: [{ amount: 999999.99, phone_number: '254712345678' }],
         account_reference: 'Large-Payment',
         transaction_desc: 'Large transaction',
+        vendor_id: 'vendor-999',
       };
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);

@@ -27,6 +27,7 @@ describe('useSTKPush', () => {
     ],
     account_reference: 'Invoice123',
     transaction_desc: 'Payment for goods',
+    vendor_id: 'vendor-123',
   };
 
   const mockResponse: StkPushResponse = {
