@@ -19,6 +19,7 @@ export interface StkPushRequest {
   payments: Payment[];
   account_reference: string;
   transaction_desc: string;
+  vendor_id: string;
 }
 
 /**

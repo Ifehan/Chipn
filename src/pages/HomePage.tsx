@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Header } from '../components/molecules/Header'
 import { TabsContainer } from '../components/molecules/TabsContainer'
@@ -10,8 +10,19 @@ import { GroupsContent } from '../components/organisms/GroupsContent'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const location = useLocation()
+  const { user, refreshUser } = useAuth()
   const [activeTab, setActiveTab] = useState<'bills' | 'groups'>('bills')
+
+  // Refresh user data when navigating from create bill page
+  useEffect(() => {
+    const state = location.state as { refresh?: boolean } | null
+    if (state?.refresh) {
+      refreshUser()
+      // Clear the state to prevent refresh on subsequent renders
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, refreshUser, navigate, location.pathname])
 
   // Get user display name and phone from context
   const userName = user ? `${user.first_name} ${user.last_name}` : 'User'

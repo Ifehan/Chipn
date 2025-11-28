@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, DollarSign, Phone, Users, ContactRound, Calculator } from "lucide-react"
 import { SplitMethodSelector } from "../components/molecules/SplitMethodSelector"
 import { useSTKPush } from "../hooks/usePayment"
+import { useVendors } from "../hooks/useVendors"
 import { useAuth } from "../contexts/AuthContext"
 import type { Payment } from "../services"
 
@@ -12,6 +13,7 @@ export function CreateNewBillPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [billName, setBillName] = useState("")
+  const [vendorId, setVendorId] = useState("")
   const [totalAmount, setTotalAmount] = useState("")
   const [description, setDescription] = useState("")
   const [splitMethod, setSplitMethod] = useState<"equal" | "percentage" | "custom">("equal")
@@ -19,6 +21,7 @@ export function CreateNewBillPage() {
   const [phoneInput, setPhoneInput] = useState("")
 
   const { initiateSTKPush, loading: stkLoading, error: stkError } = useSTKPush()
+  const { vendors, loading: vendorsLoading, error: vendorsError } = useVendors()
 
   // Get current user's phone from context
   const currentUserPhone = user?.phone_number || ""
@@ -94,18 +97,19 @@ export function CreateNewBillPage() {
       await initiateSTKPush({
         payments,
         account_reference: billName || `Bill-${Date.now()}`,
-        transaction_desc: description || `Payment for ${billName}`
+        transaction_desc: description || `Payment for ${billName}`,
+        vendor_id: vendorId
       })
 
       // Navigate to home on success
-      navigate("/home")
+      navigate("/home", { state: { refresh: true } })
     } catch (error) {
       console.error("Failed to initiate STK Push:", error)
       // Error is already handled by the hook
     }
   }
 
-  const isFormValid = billName.trim() && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0 && currentUserPhone && user
+  const isFormValid = billName.trim() && vendorId && totalAmount && parseFloat(totalAmount) > 0 && participants.length > 0 && currentUserPhone && user
 
   return (
     <div className="app-shell bg-gray-50 min-h-screen">
@@ -143,6 +147,34 @@ export function CreateNewBillPage() {
               placeholder="e.g., Dinner at Restaurant"
               className="w-full bg-gray-50 border-0 rounded-lg px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Vendor Selection */}
+          <div>
+            <label htmlFor="vendor" className="block text-sm font-medium text-gray-900 mb-2">Select Vendor</label>
+            {vendorsLoading ? (
+              <div className="w-full bg-gray-50 border-0 rounded-lg px-4 py-3 text-gray-400">
+                Loading vendors...
+              </div>
+            ) : vendorsError ? (
+              <div className="w-full bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-sm">
+                Failed to load vendors. Please try again.
+              </div>
+            ) : (
+              <select
+                id="vendor"
+                value={vendorId}
+                onChange={(e) => setVendorId(e.target.value)}
+                className="w-full bg-gray-50 border-0 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a vendor</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name} - {vendor.paybill_number}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Total Amount */}

@@ -13,6 +13,23 @@ const mockNavigate = jest.fn();
 const mockInitiateSTKPush = jest.fn();
 const mockGetCurrentUser = jest.fn();
 
+const mockVendors = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    name: 'Safaricom',
+    paybill_number: '123456',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440001',
+    name: 'Kenya Power',
+    paybill_number: '888880',
+    created_at: '2024-01-02T00:00:00Z',
+    updated_at: '2024-01-02T00:00:00Z',
+  },
+];
+
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
@@ -38,6 +55,16 @@ jest.mock('../../hooks/usePayment', () => ({
     initiateSTKPush: mockInitiateSTKPush,
     loading: false,
     error: null,
+  }),
+}));
+
+// Mock vendors hook
+jest.mock('../../hooks/useVendors', () => ({
+  useVendors: () => ({
+    vendors: mockVendors,
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
   }),
 }));
 
@@ -279,17 +306,34 @@ describe('CreateNewBillPage', () => {
     expect(sendButton).toBeDisabled();
   });
 
+  it('renders vendor dropdown', async () => {
+    await renderCreateNewBillPage();
+    expect(screen.getByLabelText(/select vendor/i)).toBeInTheDocument();
+  });
+
+  it('displays vendors in dropdown', async () => {
+    await renderCreateNewBillPage();
+    const vendorSelect = screen.getByLabelText(/select vendor/i);
+    expect(vendorSelect).toBeInTheDocument();
+
+    // Check if vendors are in the dropdown
+    const options = screen.getAllByRole('option');
+    expect(options.length).toBeGreaterThan(1); // At least "Select a vendor" + vendors
+  });
+
   it('enables send button when form is valid', async () => {
     const user = userEvent.setup();
     await renderCreateNewBillPage();
 
-    // Fill in all required fields
+    // Fill in all required fields including vendor
     const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+    const vendorSelect = screen.getByLabelText(/select vendor/i);
     const amountInput = screen.getByPlaceholderText('0');
     const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
     const addButton = screen.getByText('+');
 
     await user.type(billNameInput, 'Lunch');
+    await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
     await user.type(amountInput, '1000');
     await user.type(phoneInput, '+254712345678');
     await user.click(addButton);
@@ -307,14 +351,16 @@ describe('CreateNewBillPage', () => {
     const user = userEvent.setup();
     await renderCreateNewBillPage();
 
-    // Fill in all required fields
+    // Fill in all required fields including vendor
     const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+    const vendorSelect = screen.getByLabelText(/select vendor/i);
     const amountInput = screen.getByPlaceholderText('0');
     const descriptionInput = screen.getByPlaceholderText(/What's this bill for/i);
     const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
     const addButton = screen.getByText('+');
 
     await user.type(billNameInput, 'Lunch Bill');
+    await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
     await user.type(amountInput, '1000');
     await user.type(descriptionInput, 'Lunch');
     await user.type(phoneInput, '+254712345678');
@@ -331,10 +377,11 @@ describe('CreateNewBillPage', () => {
         ],
         account_reference: 'Lunch Bill',
         transaction_desc: 'Lunch',
+        vendor_id: '550e8400-e29b-41d4-a716-446655440000',
       });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/home');
+    expect(mockNavigate).toHaveBeenCalledWith('/home', { state: { refresh: true } });
   });
 
   it('has correct page layout', async () => {
@@ -380,11 +427,13 @@ describe('CreateNewBillPage', () => {
       await renderCreateNewBillPage();
 
       const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+      const vendorSelect = screen.getByLabelText(/select vendor/i);
       const amountInput = screen.getByPlaceholderText('0');
       const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
       const addButton = screen.getByText('+');
 
       await user.type(billNameInput, 'Test Bill');
+      await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
       await user.type(amountInput, '300');
       await user.type(phoneInput, '0712345678');
       await user.click(addButton);
@@ -403,6 +452,7 @@ describe('CreateNewBillPage', () => {
           ],
           account_reference: 'Test Bill',
           transaction_desc: 'Payment for Test Bill',
+          vendor_id: '550e8400-e29b-41d4-a716-446655440000',
         });
       });
     });
@@ -416,11 +466,13 @@ describe('CreateNewBillPage', () => {
       await renderCreateNewBillPage();
 
       const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+      const vendorSelect = screen.getByLabelText(/select vendor/i);
       const amountInput = screen.getByPlaceholderText('0');
       const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
       const addButton = screen.getByText('+');
 
       await user.type(billNameInput, 'Test');
+      await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
       await user.type(amountInput, '200');
       await user.type(phoneInput, '0712345678');
       await user.click(addButton);
@@ -436,6 +488,7 @@ describe('CreateNewBillPage', () => {
                 phone_number: '254712345678',
               }),
             ]),
+            vendor_id: '550e8400-e29b-41d4-a716-446655440000',
           })
         );
       });
@@ -456,11 +509,13 @@ describe('CreateNewBillPage', () => {
       await renderCreateNewBillPage();
 
       const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+      const vendorSelect = screen.getByLabelText(/select vendor/i);
       const amountInput = screen.getByPlaceholderText('0');
       const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
       const addButton = screen.getByText('+');
 
       await user.type(billNameInput, 'Test');
+      await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
       await user.type(amountInput, '100');
       await user.type(phoneInput, '0712345678');
       await user.click(addButton);
@@ -488,11 +543,13 @@ describe('CreateNewBillPage', () => {
       await renderCreateNewBillPage();
 
       const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+      const vendorSelect = screen.getByLabelText(/select vendor/i);
       const amountInput = screen.getByPlaceholderText('0');
       const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
       const addButton = screen.getByText('+');
 
       await user.type(billNameInput, 'Custom Bill Name');
+      await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
       await user.type(amountInput, '500');
       await user.type(phoneInput, '0712345678');
       await user.click(addButton);
@@ -504,6 +561,7 @@ describe('CreateNewBillPage', () => {
         expect(mockInitiateSTKPush).toHaveBeenCalledWith(
           expect.objectContaining({
             account_reference: 'Custom Bill Name',
+            vendor_id: '550e8400-e29b-41d4-a716-446655440000',
           })
         );
       });
@@ -518,12 +576,14 @@ describe('CreateNewBillPage', () => {
       await renderCreateNewBillPage();
 
       const billNameInput = screen.getByPlaceholderText(/e.g., Dinner at Restaurant/i);
+      const vendorSelect = screen.getByLabelText(/select vendor/i);
       const amountInput = screen.getByPlaceholderText('0');
       const descriptionInput = screen.getByPlaceholderText(/What's this bill for/i);
       const phoneInput = screen.getByPlaceholderText(/0712345678 or \+254712345678/i);
       const addButton = screen.getByText('+');
 
       await user.type(billNameInput, 'Bill');
+      await user.selectOptions(vendorSelect, '550e8400-e29b-41d4-a716-446655440000');
       await user.type(amountInput, '500');
       await user.type(descriptionInput, 'Custom Description');
       await user.type(phoneInput, '0712345678');
@@ -536,6 +596,7 @@ describe('CreateNewBillPage', () => {
         expect(mockInitiateSTKPush).toHaveBeenCalledWith(
           expect.objectContaining({
             transaction_desc: 'Custom Description',
+            vendor_id: '550e8400-e29b-41d4-a716-446655440000',
           })
         );
       });

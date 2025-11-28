@@ -35,6 +35,30 @@ test.describe('Bill Management', () => {
       });
     });
 
+    // Mock the vendors API call
+    await page.route('**/vendors/', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'Safaricom',
+            paybill_number: '123456',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
+          },
+          {
+            id: '550e8400-e29b-41d4-a716-446655440001',
+            name: 'Kenya Power',
+            paybill_number: '888880',
+            created_at: '2024-01-02T00:00:00Z',
+            updated_at: '2024-01-02T00:00:00Z'
+          }
+        ])
+      });
+    });
+
     // Mock the STK Push API call
     await page.route('**/mpesa/stk-push', async (route: any) => {
       await route.fulfill({
@@ -70,6 +94,7 @@ test.describe('Bill Management', () => {
 
       // Verify form elements are visible
       await expect(createBillPage.billNameInput).toBeVisible();
+      await expect(createBillPage.vendorSelect).toBeVisible();
       await expect(createBillPage.amountInput).toBeVisible();
       await expect(createBillPage.createButton).toBeVisible();
     });
@@ -82,11 +107,13 @@ test.describe('Bill Management', () => {
 
       // Fill form
       await createBillPage.fillBillName('Dinner at Restaurant');
+      await createBillPage.selectVendor('550e8400-e29b-41d4-a716-446655440000');
       await createBillPage.fillAmount('150.00');
       await createBillPage.fillDescription('Team dinner celebration');
 
       // Verify values are filled
       await expect(createBillPage.billNameInput).toHaveValue('Dinner at Restaurant');
+      await expect(createBillPage.vendorSelect).toHaveValue('550e8400-e29b-41d4-a716-446655440000');
       await expect(createBillPage.amountInput).toHaveValue('150.00');
       await expect(createBillPage.descriptionInput).toHaveValue('Team dinner celebration');
     });
@@ -119,6 +146,7 @@ test.describe('Bill Management', () => {
       // Create bill
       await createBillPage.createBill({
         name: 'Grocery Shopping',
+        vendorId: '550e8400-e29b-41d4-a716-446655440000',
         amount: '85.50',
         description: 'Weekly groceries',
         splitMethod: 'equal'
@@ -185,6 +213,7 @@ test.describe('Bill Management', () => {
       const createBillPage = new CreateBillPage(page);
       await createBillPage.createBill({
         name: 'Movie Tickets',
+        vendorId: '550e8400-e29b-41d4-a716-446655440000',
         amount: '45.00',
         description: 'Weekend movie',
         splitMethod: 'equal'
@@ -271,6 +300,7 @@ test.describe('Bill Management', () => {
       // Create bill with participant
       await createBillPage.createBill({
         name: 'Test Bill',
+        vendorId: '550e8400-e29b-41d4-a716-446655440000',
         amount: '300',
         description: 'Test Description',
         splitMethod: 'equal'
@@ -284,6 +314,7 @@ test.describe('Bill Management', () => {
       expect(stkPushPayload).toBeTruthy();
       expect(stkPushPayload.account_reference).toBe('Test Bill');
       expect(stkPushPayload.transaction_desc).toBe('Test Description');
+      expect(stkPushPayload.vendor_id).toBe('550e8400-e29b-41d4-a716-446655440000');
       expect(stkPushPayload.payments).toHaveLength(2); // Current user + 1 participant
     });
 
@@ -306,6 +337,7 @@ test.describe('Bill Management', () => {
 
       // Create bill
       await createBillPage.fillBillName('Test Bill');
+      await createBillPage.selectVendor('550e8400-e29b-41d4-a716-446655440000');
       await createBillPage.fillAmount('100');
 
       const phoneInput = page.getByPlaceholder(/0712345678|\\+254712345678/i);
@@ -341,6 +373,7 @@ test.describe('Bill Management', () => {
 
       // Fill form
       await createBillPage.fillBillName('Split Test');
+      await createBillPage.selectVendor('550e8400-e29b-41d4-a716-446655440000');
       await createBillPage.fillAmount('300');
       await createBillPage.selectSplitMethod('equal');
 
@@ -387,6 +420,7 @@ test.describe('Bill Management', () => {
 
       // Fill form
       await createBillPage.fillBillName('Phone Test');
+      await createBillPage.selectVendor('550e8400-e29b-41d4-a716-446655440000');
       await createBillPage.fillAmount('200');
 
       // Add participant with local format

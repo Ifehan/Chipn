@@ -10,6 +10,7 @@ export class CreateBillPage extends BasePage {
   readonly heading: Locator;
   readonly backButton: Locator;
   readonly billNameInput: Locator;
+  readonly vendorSelect: Locator;
   readonly amountInput: Locator;
   readonly descriptionInput: Locator;
   readonly splitMethodEqual: Locator;
@@ -25,6 +26,7 @@ export class CreateBillPage extends BasePage {
     this.heading = page.getByRole('heading', { name: /create new bill/i });
     this.backButton = page.locator('button').filter({ has: page.locator('svg') }).first(); // ArrowLeft icon button
     this.billNameInput = page.getByLabel(/bill name/i);
+    this.vendorSelect = page.getByLabel(/select vendor/i);
     this.amountInput = page.getByLabel(/total amount/i);
     this.descriptionInput = page.getByLabel(/description/i);
     this.splitMethodEqual = page.getByRole('button', { name: /^equal$/i });
@@ -47,6 +49,13 @@ export class CreateBillPage extends BasePage {
    */
   async fillBillName(name: string) {
     await this.billNameInput.fill(name);
+  }
+
+  /**
+   * Select vendor
+   */
+  async selectVendor(vendorId: string) {
+    await this.vendorSelect.selectOption(vendorId);
   }
 
   /**
@@ -106,11 +115,13 @@ export class CreateBillPage extends BasePage {
    */
   async createBill(data: {
     name: string;
+    vendorId: string;
     amount: string;
     description?: string;
     splitMethod?: 'equal' | 'percentage' | 'custom';
   }) {
     await this.fillBillName(data.name);
+    await this.selectVendor(data.vendorId);
     await this.fillAmount(data.amount);
 
     if (data.description) {
