@@ -12,7 +12,7 @@ Welcome to the Tunga Pay documentation! This directory contains comprehensive gu
 - **[Contributing Guide](contributing.md)** - How to contribute to the project
 
 ### Feature Documentation
-- **[Transaction History](transaction-history.md)** - Complete guide to the transaction history feature
+- **[Transaction History](transactions.md)** - Complete guide to the transaction history feature
 - **[Authentication](authentication.md)** - Authentication system documentation
 
 ### Testing Documentation

@@ -17,7 +17,7 @@ A modern bill splitting and payment management application built with React, Typ
 
 - **Bill Management**
   - Create new bills with multiple split methods (Equal, Percentage, Custom)
-  - View recent bills and transactions
+  - View recent bills andtransaction-history
   - Transaction history tracking
   - Empty state handling with helpful prompts
 
@@ -205,7 +205,7 @@ Full page components that combine organisms, molecules, and atoms:
 | `/home` | HomePage | Main dashboard with bills/groups |
 | `/profile` | ProfileSettingsPage | User settings and profile |
 | `/create-bill` | CreateNewBillPage | Create new bill form |
-| `/transaction-history` | TransactionHistoryPage | View all transactions |
+| `/transactions` | TransactionHistoryPage | View alltransaction-history |
 
 ## 🎯 Getting Started
 

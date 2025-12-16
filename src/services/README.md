@@ -147,7 +147,7 @@ VITE_API_BASE_URL=http://localhost:8000
 ```
 
 #### GET /mpesa/transactions - Get Transaction History
-**Used on:** Transaction History page (`/transaction-history`)
+**Used on:** Transaction History page (`/transactions`)
 
 **Query Parameters:**
 - `status`: Filter by status (`pending`, `completed`, `all`)

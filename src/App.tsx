@@ -9,6 +9,11 @@ import { ProfileSettingsPage } from "./pages/ProfileSettingsPage"
 import { CreateNewBillPage } from "./pages/CreateNewBillPage"
 import { TransactionHistoryPage } from "./pages/TransactionHistoryPage"
 import { ProtectedRoute } from "./components/ProtectedRoute"
+import { AdminDashboard } from "./pages/AdminDashboard"
+import { VendorsPage } from "./pages/VendorsPage"
+import { UserManagementPage } from "./pages/UserManagementPage"
+import { AdminLoginPage } from "./pages/AdminLoginPage"
+import { TransactionsManagementPage } from "./pages/TransactionsManagementPage"
 
 export default function App() {
   return (
@@ -17,6 +22,7 @@ export default function App() {
         <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/password-reset" element={<PasswordResetPage />} />
         <Route
@@ -46,10 +52,42 @@ export default function App() {
           }
         />
         <Route
-          path="/transaction-history"
+          path="/transactions"
           element={
             <ProtectedRoute>
               <TransactionHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/vendors"
+          element={
+            <ProtectedRoute>
+              <VendorsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/transactions"
+          element={
+            <ProtectedRoute>
+              <TransactionsManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <UserManagementPage />
             </ProtectedRoute>
           }
         />

@@ -138,7 +138,7 @@ test('should create a bill successfully', async ({ page }) => {
     splitMethod: 'equal'
   });
 
-  await expect(page).toHaveURL(/\/(home|transaction-history)/);
+  await expect(page).toHaveURL(/\/(home|transactions)/);
 });
 ```
 

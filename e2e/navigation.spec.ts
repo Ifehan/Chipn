@@ -182,10 +182,10 @@ test.describe('Navigation and User Flows', () => {
       await loginUser(page);
 
       // Navigate directly to transaction history
-      await page.goto('/transaction-history');
+      await page.goto('/transactions');
 
       // Should be on transaction history page
-      await expect(page).toHaveURL('/transaction-history');
+      await expect(page).toHaveURL('/transactions');
     });
   });
 

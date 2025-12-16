@@ -153,7 +153,7 @@ test.describe('Bill Management', () => {
       });
 
       // Should navigate back to home or show success
-      await page.waitForURL(/\/(home|transaction-history)/, { timeout: 5000 });
+      await page.waitForURL(/\/(home|transactions)/, { timeout: 5000 });
     });
 
     test('should navigate back to home when cancel is clicked', async ({ page }) => {
@@ -220,7 +220,7 @@ test.describe('Bill Management', () => {
       });
 
       // Should return to home or transaction history
-      await page.waitForURL(/\/(home|transaction-history)/, { timeout: 5000 });
+      await page.waitForURL(/\/(home|transactions)/, { timeout: 5000 });
     });
   });
 

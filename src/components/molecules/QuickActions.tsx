@@ -20,7 +20,7 @@ export function QuickActions() {
           <span className="text-sm">Split Bill</span>
         </Button>
         <Button
-          onClick={() => navigate("/transaction-history")}
+          onClick={() => navigate("/transactions")}
           variant="outline"
           fullWidth
           className="flex flex-col items-center justify-center gap-2 py-4 text-sm quick-action bg-white"

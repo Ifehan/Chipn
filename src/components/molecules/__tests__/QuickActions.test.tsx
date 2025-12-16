@@ -48,7 +48,7 @@ describe('QuickActions', () => {
     const historyButton = screen.getByText('History');
     fireEvent.click(historyButton);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/transaction-history');
+    expect(mockNavigate).toHaveBeenCalledWith('/transactions');
   });
 
   it('renders buttons in a grid layout', () => {

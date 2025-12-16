@@ -2,12 +2,12 @@
 
 ## Overview
 
-The Transaction History feature provides users with a comprehensive view of all their M-Pesa transactions, including filtering, search, and pagination capabilities. It integrates with the `/mpesa/transactions` API endpoint to fetch and display transaction data in real-time.
+The Transaction History feature provides users with a comprehensive view of all their M-Pesatransaction-history, including filtering, search, and pagination capabilities. It integrates with the `/mpesa/transactions` API endpoint to fetch and display transaction data in real-time.
 
 ## Features
 
-- ✅ **Real-time Data Fetching** - Automatically fetches transactions from the API
-- ✅ **Status Filtering** - Filter by All, Pending, or Completed transactions
+- ✅ **Real-time Data Fetching** - Automatically fetchestransaction-history from the API
+- ✅ **Status Filtering** - Filter by All, Pending, or Completedtransaction-history
 - ✅ **Pagination** - Navigate through large transaction lists with Previous/Next controls
 - ✅ **Client-side Search** - Search across account reference, phone number, receipt number, and description
 - ✅ **Status Badges** - Visual indicators for transaction status (Completed, Pending, Failed)
@@ -15,7 +15,7 @@ The Transaction History feature provides users with a comprehensive view of all 
 - ✅ **Date Formatting** - Transaction dates formatted for readability
 - ✅ **Loading States** - Visual feedback during data fetching
 - ✅ **Error Handling** - Graceful error display with user-friendly messages
-- ✅ **Empty States** - Appropriate messaging when no transactions exist
+- ✅ **Empty States** - Appropriate messaging when notransaction-history exist
 
 ## Architecture
 
@@ -72,7 +72,7 @@ GET /mpesa/transactions
 
 ```typescript
 {
-  transactions: Transaction[];
+ transaction-history: Transaction[];
   total: number;
   page: number;
   page_size: number;
@@ -113,7 +113,7 @@ interface Transaction {
 import { useTransactionHistory } from '@/hooks/useTransactionHistory';
 
 function TransactionHistoryPage() {
-  const { transactions, total, isLoading, error } = useTransactionHistory();
+  const {transaction-history, total, isLoading, error } = useTransactionHistory();
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -135,7 +135,7 @@ function TransactionHistoryPage() {
 ### With Filtering
 
 ```typescript
-const { transactions, total, isLoading, error } = useTransactionHistory({
+const {transaction-history, total, isLoading, error } = useTransactionHistory({
   status: 'pending',
   page: 1,
   page_size: 20
@@ -147,7 +147,7 @@ const { transactions, total, isLoading, error } = useTransactionHistory({
 ```typescript
 const [currentPage, setCurrentPage] = useState(1);
 
-const { transactions, total, page, pageSize, isLoading } = useTransactionHistory({
+const {transaction-history, total, page, pageSize, isLoading } = useTransactionHistory({
   status: 'all',
   page: currentPage,
   page_size: 20
@@ -173,9 +173,9 @@ const handlePreviousPage = () => {
 ```typescript
 const [searchQuery, setSearchQuery] = useState('');
 
-const { transactions } = useTransactionHistory();
+const {transaction-history } = useTransactionHistory();
 
-const filteredTransactions = transactions.filter(transaction => {
+const filteredTransactions =transaction-history.filter(transaction => {
   const query = searchQuery.toLowerCase();
   return (
     transaction.account_reference.toLowerCase().includes(query) ||
@@ -245,7 +245,7 @@ Each transaction is displayed in a card with:
 
 ```typescript
 interface UseTransactionHistoryResult {
-  transactions: Transaction[];
+ transaction-history: Transaction[];
   total: number;
   page: number;
   pageSize: number;
@@ -275,7 +275,7 @@ interface TransactionHistoryParams {
 | Property | Type | Description |
 |----------|------|-------------|
 | `transactions` | `Transaction[]` | Array of transaction objects |
-| `total` | `number` | Total number of transactions |
+| `total` | `number` | Total number oftransaction-history |
 | `page` | `number` | Current page number |
 | `pageSize` | `number` | Number of items per page |
 | `statusFilter` | `string` | Current status filter |
@@ -298,7 +298,7 @@ interface TransactionHistoryParams {
 The feature includes comprehensive test coverage:
 
 #### Hook Tests (`src/hooks/__tests__/useTransactionHistory.test.ts`)
-- ✅ Fetches transactions successfully
+- ✅ Fetchestransaction-history successfully
 - ✅ Handles custom parameters
 - ✅ Handles errors gracefully
 - ✅ Supports manual refetch
@@ -308,8 +308,8 @@ The feature includes comprehensive test coverage:
 - ✅ Renders without crashing
 - ✅ Displays loading state
 - ✅ Displays error state
-- ✅ Displays transactions
-- ✅ Filters transactions by search query
+- ✅ Displaystransaction-history
+- ✅ Filterstransaction-history by search query
 - ✅ Displays status badges correctly
 - ✅ Shows M-Pesa receipt numbers
 - ✅ Formats amounts correctly
@@ -335,7 +335,7 @@ pnpm test -- --coverage
 ### Optimization Strategies
 
 1. **Stable Dependencies** - Uses `JSON.stringify(params)` to prevent unnecessary re-renders
-2. **Client-side Search** - Filters transactions in memory for instant results
+2. **Client-side Search** - Filterstransaction-history in memory for instant results
 3. **Pagination** - Limits data fetched per request (default: 50 items)
 4. **Memoization** - Uses `useCallback` for stable function references
 
@@ -350,15 +350,15 @@ pnpm test -- --coverage
 
 ### Common Issues
 
-#### No Transactions Displayed
+#### Notransaction-history Displayed
 
 **Possible Causes:**
-- No transactions exist for the user
+- Notransaction-history exist for the user
 - API endpoint not configured correctly
 - Authentication token missing or invalid
 
 **Solutions:**
-1. Check if user has any transactions in the database
+1. Check if user has anytransaction-history in the database
 2. Verify `VITE_API_BASE_URL` in `.env` file
 3. Ensure user is authenticated (check localStorage for token)
 
