@@ -14,6 +14,10 @@ jobs:
   unit-tests:
     name: Unit Tests (Jest)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
@@ -87,16 +91,24 @@ jobs:
 
             ${allPass ? '✅ **Coverage threshold met! Ready to merge.**' : '❌ **Coverage below 80% threshold. Please add more tests before merging.**'}`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body,
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+            } catch (err) {
+              core.warning(`Could not post coverage comment: ${err.message}`);
+            }
 
   e2e-tests:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
@@ -168,12 +180,16 @@ jobs:
 
             body += `\n[View Playwright report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body,
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+            } catch (err) {
+              core.warning(`Could not post E2E results comment: ${err.message}`);
+            }
 
   coverage-gate:
     name: Coverage Gate (80% Required)
