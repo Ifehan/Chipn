@@ -43,10 +43,8 @@ export class AuthService {
       credentials
     );
 
-    // Store the access token in localStorage
     if (response.access_token) {
       localStorage.setItem('authToken', response.access_token);
-      sessionStorage.setItem('isAuthenticated', 'true');
     }
 
     return response;
@@ -82,14 +80,15 @@ export class AuthService {
    */
   logout(): void {
     localStorage.removeItem('authToken');
-    sessionStorage.removeItem('isAuthenticated');
   }
 
   /**
-   * Check if user is authenticated
+   * Check if a token exists in storage.
+   * The authoritative isAuthenticated state lives in AuthContext (derived from user object).
+   * This is only used for the initial app load check.
    */
-  isAuthenticated(): boolean {
-    return sessionStorage.getItem('isAuthenticated') === 'true';
+  hasToken(): boolean {
+    return localStorage.getItem('authToken') !== null;
   }
 
   /**

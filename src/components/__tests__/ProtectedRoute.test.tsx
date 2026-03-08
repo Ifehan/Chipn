@@ -8,16 +8,14 @@ import { ProtectedRoute } from '../ProtectedRoute';
 import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
 
-// Mock auth service
 jest.mock('../../services/auth.service', () => ({
   authService: {
-    isAuthenticated: jest.fn(),
+    hasToken: jest.fn(),
     getAccessToken: jest.fn(),
     logout: jest.fn(),
   },
 }));
 
-// Mock users service
 jest.mock('../../services/users.service', () => ({
   usersService: {
     getCurrentUser: jest.fn(),
@@ -27,71 +25,54 @@ jest.mock('../../services/users.service', () => ({
 const TestComponent = () => <div>Protected Content</div>;
 const LoginComponent = () => <div>Login Page</div>;
 
+const renderWithRouter = () =>
+  render(
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginComponent />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <TestComponent />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    sessionStorage.clear();
     jest.clearAllMocks();
-    // Default to not authenticated
-    (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+    (authService.hasToken as jest.Mock).mockReturnValue(false);
     (authService.getAccessToken as jest.Mock).mockReturnValue(null);
   });
 
-  afterEach(() => {
-    sessionStorage.clear();
-  });
-
   it('renders children when user is authenticated', async () => {
-    sessionStorage.setItem('isAuthenticated', 'true');
-    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.hasToken as jest.Mock).mockReturnValue(true);
     (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
     (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       first_name: 'Test',
       last_name: 'User',
+      phone_number: '254700000000',
+      id_type: 'national_id',
+      role: 'user',
     });
 
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText('Protected Content')).toBeInTheDocument();
     });
   });
 
-  it('redirects to login when user is not authenticated', async () => {
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
+  it('redirects to login when no token exists', async () => {
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText('Login Page')).toBeInTheDocument();
@@ -99,78 +80,15 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('treats missing sessionStorage value as not authenticated', async () => {
-    sessionStorage.removeItem('isAuthenticated');
-
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Login Page')).toBeInTheDocument();
+  it('redirects to login when token exists but user fetch fails (expired token)', async () => {
+    (authService.hasToken as jest.Mock).mockReturnValue(true);
+    (authService.getAccessToken as jest.Mock).mockReturnValue('expired-token');
+    (usersService.getCurrentUser as jest.Mock).mockRejectedValue({
+      message: 'Unauthorized',
+      status: 401,
     });
-  });
 
-  it('treats false sessionStorage value as not authenticated', async () => {
-    sessionStorage.setItem('isAuthenticated', 'false');
-
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Login Page')).toBeInTheDocument();
-    });
-  });
-
-  it('only accepts "true" string as authenticated', async () => {
-    sessionStorage.setItem('isAuthenticated', 'yes');
-
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText('Login Page')).toBeInTheDocument();
@@ -178,25 +96,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('uses replace navigation to prevent back button issues', async () => {
-    // This test verifies the component uses replace prop
-    // The actual navigation behavior is tested through the redirect
-    render(
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginComponent />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <TestComponent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    );
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText('Login Page')).toBeInTheDocument();

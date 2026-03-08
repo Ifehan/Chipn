@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Input } from '../components/atoms/Input'
-import { Button } from '../components/atoms/Button'
 import type { ApiError } from '../services/api-client'
 import { Lock } from 'lucide-react'
 
@@ -31,24 +29,15 @@ export function AdminLoginPage() {
     } catch (err) {
       const apiError = err as ApiError
       setError(apiError.message || 'Login failed. Please try again.')
-      console.error('Admin login failed:', err)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const demoCredentials = [
-    { role: 'Admin', email: 'admin@tandapay.com', password: 'admin123' },
-    { role: 'Support Staff', email: 'support@tandapay.com', password: 'support123' },
-    { role: 'Analyst', email: 'analyst@tandapay.com', password: 'analyst123' }
-  ]
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Main Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          {/* Header with Lock Icon */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
               <Lock size={32} className="text-white" />
@@ -57,52 +46,41 @@ export function AdminLoginPage() {
             <p className="text-slate-600 text-center mt-2">Sign in to access the dashboard</p>
           </div>
 
-          {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email Input */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email Address
               </label>
-              <div className="relative">
-                <div className="absolute left-3 top-3 text-slate-400">📧</div>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500"
-                />
-              </div>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500"
+              />
             </div>
 
-            {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute left-3 top-3 text-slate-400">🔒</div>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500"
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500"
+              />
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-700 text-sm">{error}</p>
               </div>
             )}
 
-            {/* Sign In Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -137,7 +115,6 @@ export function AdminLoginPage() {
               )}
             </button>
 
-            {/* Back to Home Link */}
             <button
               type="button"
               onClick={() => navigate('/')}
@@ -147,28 +124,6 @@ export function AdminLoginPage() {
               Back to Home
             </button>
           </form>
-        </div>
-
-        {/* Demo Credentials Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Demo Credentials:</h2>
-          <div className="space-y-4">
-            {demoCredentials.map((cred, index) => (
-              <div key={index} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                <p className="text-sm font-medium text-slate-700 mb-2">{cred.role}</p>
-                <div className="flex gap-4 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Email</p>
-                    <p className="text-slate-700 font-mono">{cred.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Password</p>
-                    <p className="text-slate-700 font-mono">{cred.password}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

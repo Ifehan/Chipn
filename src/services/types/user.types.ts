@@ -7,6 +7,8 @@
  * User entity returned by API
  * Used in responses from all user endpoints
  */
+export type UserRole = 'user' | 'admin' | 'support' | 'analyst';
+
 export interface User {
   id: string;
   first_name: string;
@@ -14,6 +16,7 @@ export interface User {
   email: string;
   phone_number: string;
   id_type: string;
+  role: UserRole;
   created_at?: string;
   updated_at?: string;
   pending_transactions_total?: number;

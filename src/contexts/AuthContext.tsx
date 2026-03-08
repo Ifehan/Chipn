@@ -36,12 +36,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(null)
       const userData = await usersService.getCurrentUser()
       setUser(userData)
-    } catch (err: any) {
-      console.error('Failed to fetch user:', err)
-      setError(err.message || 'Failed to fetch user data')
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; status?: number }
+      setError(apiErr.message || 'Failed to fetch user data')
 
-      // If unauthorized, clear auth state
-      if (err?.status === 401) {
+      if (apiErr?.status === 401) {
         authService.logout()
         setUser(null)
       }
@@ -51,15 +50,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   /**
-   * Initialize auth state on mount
-   * Check if token exists and fetch user data
+   * Initialize auth state on mount.
+   * If a token exists, attempt to fetch the current user.
+   * A 401 response will clear the token automatically via the API client.
    */
   useEffect(() => {
     const initAuth = async () => {
-      const token = authService.getAccessToken()
-      const isAuth = authService.isAuthenticated()
-
-      if (token && isAuth) {
+      if (authService.hasToken()) {
         await fetchCurrentUser()
       } else {
         setLoading(false)
@@ -83,9 +80,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fetch user data after successful login
       await fetchCurrentUser()
-    } catch (err: any) {
-      console.error('Login failed:', err)
-      setError(err.message || 'Login failed')
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string }
+      setError(apiErr.message || 'Login failed')
       throw err
     } finally {
       setLoading(false)
@@ -115,7 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     loading,
     error,
-    isAuthenticated: !!user && authService.isAuthenticated(),
+    isAuthenticated: !!user,
     login,
     logout,
     refreshUser,

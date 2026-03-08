@@ -9,11 +9,13 @@ import { ProfileSettingsPage } from "./pages/ProfileSettingsPage"
 import { CreateNewBillPage } from "./pages/CreateNewBillPage"
 import { TransactionHistoryPage } from "./pages/TransactionHistoryPage"
 import { ProtectedRoute } from "./components/ProtectedRoute"
+import { AdminRoute } from "./components/AdminRoute"
 import { AdminDashboard } from "./pages/AdminDashboard"
 import { VendorsPage } from "./pages/VendorsPage"
 import { UserManagementPage } from "./pages/UserManagementPage"
 import { AdminLoginPage } from "./pages/AdminLoginPage"
 import { TransactionsManagementPage } from "./pages/TransactionsManagementPage"
+import { NotFoundPage } from "./pages/NotFoundPage"
 
 export default function App() {
   return (
@@ -37,9 +39,7 @@ export default function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfileSettingsPage
-                onBack={() => window.history.back()}
-              />
+              <ProfileSettingsPage />
             </ProtectedRoute>
           }
         />
@@ -62,35 +62,36 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminDashboard />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/vendors"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <VendorsPage />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/transactions"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <TransactionsManagementPage />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/users"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <UserManagementPage />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>
     </Router>
