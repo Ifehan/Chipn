@@ -37,7 +37,7 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../../services/auth.service', () => ({
   authService: {
-    isAuthenticated: jest.fn(),
+    hasToken: jest.fn(),
     getAccessToken: jest.fn(),
     logout: jest.fn(),
   },
@@ -107,7 +107,7 @@ describe('CreateNewBillPage', () => {
     jest.clearAllMocks();
 
     // Mock auth service
-    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.hasToken as jest.Mock).mockReturnValue(true);
     (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
 
     // Mock users service for AuthProvider
@@ -118,6 +118,7 @@ describe('CreateNewBillPage', () => {
       email: 'john@example.com',
       phone_number: '254700000000',
       id_type: 'national_id',
+      role: 'user',
     });
 
   });

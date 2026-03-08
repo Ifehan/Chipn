@@ -18,7 +18,7 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../../services/auth.service', () => ({
   authService: {
-    isAuthenticated: jest.fn(),
+    hasToken: jest.fn(),
     getAccessToken: jest.fn(),
     logout: jest.fn(),
   },
@@ -89,13 +89,16 @@ describe('HomePage', () => {
     mockNavigate.mockClear();
     jest.clearAllMocks();
     // Default to authenticated state
-    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.hasToken as jest.Mock).mockReturnValue(true);
     (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
     (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       first_name: 'Test',
       last_name: 'User',
+      phone_number: '254700000000',
+      id_type: 'national_id',
+      role: 'user',
     });
   });
 

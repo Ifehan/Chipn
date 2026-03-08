@@ -14,11 +14,10 @@ describe('AuthService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
-    sessionStorage.clear();
   });
 
   describe('login', () => {
-    it('should successfully login and store tokens', async () => {
+    it('should successfully login and store token', async () => {
       const mockResponse: LoginResponse = {
         access_token: 'test-token-123',
         token_type: 'bearer',
@@ -37,7 +36,6 @@ describe('AuthService', () => {
       expect(apiClient.post).toHaveBeenCalledWith('/auth/login', credentials);
       expect(result).toEqual(mockResponse);
       expect(localStorage.getItem('authToken')).toBe('test-token-123');
-      expect(sessionStorage.getItem('isAuthenticated')).toBe('true');
     });
 
     it('should handle login failure', async () => {
@@ -55,10 +53,9 @@ describe('AuthService', () => {
 
       await expect(authService.login(credentials)).rejects.toEqual(mockError);
       expect(localStorage.getItem('authToken')).toBeNull();
-      expect(sessionStorage.getItem('isAuthenticated')).toBeNull();
     });
 
-    it('should not store tokens if access_token is missing', async () => {
+    it('should not store token if access_token is missing', async () => {
       const mockResponse = {
         access_token: '',
         token_type: 'bearer',
@@ -67,15 +64,9 @@ describe('AuthService', () => {
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
 
-      const credentials = {
-        email: 'test@example.com',
-        password: 'password123',
-      };
-
-      await authService.login(credentials);
+      await authService.login({ email: 'test@example.com', password: 'password123' });
 
       expect(localStorage.getItem('authToken')).toBeNull();
-      expect(sessionStorage.getItem('isAuthenticated')).toBeNull();
     });
   });
 
@@ -87,62 +78,41 @@ describe('AuthService', () => {
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
 
-      const data = {
-        email: 'test@example.com',
-      };
-
+      const data = { email: 'test@example.com' };
       const result = await authService.requestPasswordReset(data);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/auth/password-reset/request',
-        data
-      );
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/password-reset/request', data);
       expect(result).toEqual(mockResponse);
     });
 
     it('should handle password reset request failure', async () => {
-      const mockError = {
-        message: 'Email not found',
-        status: 404,
-      };
-
+      const mockError = { message: 'Email not found', status: 404 };
       (apiClient.post as jest.Mock).mockRejectedValue(mockError);
 
-      const data = {
-        email: 'nonexistent@example.com',
-      };
-
-      await expect(authService.requestPasswordReset(data)).rejects.toEqual(
-        mockError
-      );
+      await expect(
+        authService.requestPasswordReset({ email: 'nonexistent@example.com' })
+      ).rejects.toEqual(mockError);
     });
   });
 
   describe('logout', () => {
-    it('should clear authentication tokens', () => {
+    it('should clear the auth token from localStorage', () => {
       localStorage.setItem('authToken', 'test-token');
-      sessionStorage.setItem('isAuthenticated', 'true');
 
       authService.logout();
 
       expect(localStorage.getItem('authToken')).toBeNull();
-      expect(sessionStorage.getItem('isAuthenticated')).toBeNull();
     });
   });
 
-  describe('isAuthenticated', () => {
-    it('should return true when user is authenticated', () => {
-      sessionStorage.setItem('isAuthenticated', 'true');
-      expect(authService.isAuthenticated()).toBe(true);
+  describe('hasToken', () => {
+    it('should return true when a token is stored', () => {
+      localStorage.setItem('authToken', 'test-token-123');
+      expect(authService.hasToken()).toBe(true);
     });
 
-    it('should return false when user is not authenticated', () => {
-      expect(authService.isAuthenticated()).toBe(false);
-    });
-
-    it('should return false when isAuthenticated is not "true"', () => {
-      sessionStorage.setItem('isAuthenticated', 'false');
-      expect(authService.isAuthenticated()).toBe(false);
+    it('should return false when no token is stored', () => {
+      expect(authService.hasToken()).toBe(false);
     });
   });
 

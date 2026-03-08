@@ -38,6 +38,7 @@ describe('useUsers Hooks', () => {
     email: 'john.doe@example.com',
     phone_number: '+1234567890',
     id_type: 'passport',
+    role: 'user',
   };
 
   const mockApiError: ApiError = {

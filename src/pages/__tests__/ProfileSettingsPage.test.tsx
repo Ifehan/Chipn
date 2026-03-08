@@ -32,7 +32,7 @@ const mockGetCurrentUser = jest.fn();
 
 jest.mock('../../services/auth.service', () => ({
   authService: {
-    isAuthenticated: jest.fn(),
+    hasToken: jest.fn(),
     getAccessToken: jest.fn(),
     logout: jest.fn(),
   },
@@ -91,10 +91,6 @@ jest.mock('../../components/molecules/LogoutButton', () => ({
   ),
 }));
 
-const defaultProps = {
-  onBack: jest.fn(),
-};
-
 const mockUserData = {
   id: 'user123',
   first_name: 'John',
@@ -102,13 +98,14 @@ const mockUserData = {
   email: 'john@example.com',
   phone_number: '+254712345678',
   id_type: 'passport',
+  role: 'user',
 };
 
-const renderProfileSettingsPage = (props = {}) => {
+const renderProfileSettingsPage = () => {
   return render(
     <BrowserRouter>
       <AuthProvider>
-        <ProfileSettingsPage {...defaultProps} {...props} />
+        <ProfileSettingsPage />
       </AuthProvider>
     </BrowserRouter>
   );
@@ -119,7 +116,7 @@ describe('ProfileSettingsPage', () => {
     jest.clearAllMocks();
 
     // Mock auth service
-    (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
+    (authService.hasToken as jest.Mock).mockReturnValue(true);
     (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
 
     // Mock users service for AuthProvider
@@ -171,22 +168,14 @@ describe('ProfileSettingsPage', () => {
     });
   });
 
-  it('calls onBack when back button is clicked', async () => {
-    const user = userEvent.setup();
-    const onBack = jest.fn();
-
+  it('renders back button', async () => {
     await act(async () => {
-      renderProfileSettingsPage({ onBack });
+      renderProfileSettingsPage();
     });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-back-button')).toBeInTheDocument();
     });
-
-    const backButton = screen.getByTestId('mock-back-button');
-    await user.click(backButton);
-
-    expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('renders ProfileCard with fetched user data', async () => {

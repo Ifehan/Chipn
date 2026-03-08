@@ -28,6 +28,7 @@ describe('UsersService', () => {
     email: 'john.doe@example.com',
     phone_number: '+1234567890',
     id_type: 'passport',
+    role: 'user',
   };
 
   describe('createUser - POST /users/', () => {
@@ -48,6 +49,7 @@ describe('UsersService', () => {
         email: 'john.doe@example.com',
         phone_number: '+1234567890',
         id_type: 'passport',
+        role: 'user',
       };
 
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
@@ -195,6 +197,7 @@ describe('UsersService', () => {
         email: 'jane.smith@example.com',
         phone_number: '+9876543210',
         id_type: 'national_id',
+        role: 'user',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-02T00:00:00Z',
       };
