@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BackButton } from '../components/atoms/BackButton'
 import { ProfileCard } from '../components/molecules/ProfileCard'
 import { AccountSettingsSection } from '../components/organisms/AccountSettingsSection'
@@ -7,17 +8,15 @@ import { SupportSection } from '../components/organisms/SupportSection'
 import { LogoutButton } from '../components/molecules/LogoutButton'
 import { useAuth } from '../contexts/AuthContext'
 
-interface ProfileSettingsPageProps {
-  onBack: () => void
-}
-
 /**
  * Profile Settings Page
  * Uses user data from AuthContext (already fetched on login)
  * Uses PUT /users/{user_id} to update user information
- * Route: /profile-settings
+ * Route: /profile
  */
-export function ProfileSettingsPage({ onBack }: ProfileSettingsPageProps) {
+export function ProfileSettingsPage() {
+  const navigate = useNavigate()
+  const onBack = () => navigate(-1)
   const { user, logout, loading } = useAuth()
 
   // Prepare user data for display

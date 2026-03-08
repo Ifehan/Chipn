@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Sidebar } from '../components/organisms/Sidebar'
 import { StatCard } from '../components/atoms/StatCard'
-import { Users, MapPin, Phone } from 'lucide-react'
+import { Users, MapPin } from 'lucide-react'
 
 interface Vendor {
   id: string

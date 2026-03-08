@@ -8,7 +8,7 @@ interface StatCardProps {
   trend?: 'up' | 'down'
 }
 
-export function StatCard({ label, amount, icon, trend }: StatCardProps) {
+export function StatCard({ label, amount, icon, trend: _trend }: StatCardProps) {
   return (
     <Card>
       <div className="flex flex-col gap-2">

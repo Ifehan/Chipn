@@ -3,29 +3,7 @@
  * Handles common HTTP operations and configuration
  */
 
-// Use a function to safely access environment variables in both Vite and Jest
-const getApiBaseUrl = (): string => {
-  // Check if we're in a Node environment (Jest)
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.VITE_API_BASE_URL || 'http://localhost:8000';
-  }
-
-  // Try to access import.meta.env (Vite) using eval to avoid Jest parsing issues
-  try {
-    // This approach prevents Jest from trying to parse import.meta at compile time
-    const importMeta = (0, eval)('import.meta');
-    if (importMeta && importMeta.env && importMeta.env.VITE_API_BASE_URL) {
-      return importMeta.env.VITE_API_BASE_URL;
-    }
-  } catch (e) {
-    // import.meta not available, continue to fallback
-  }
-
-  // Default fallback
-  return 'http://localhost:8000';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+import { API_BASE_URL } from '../lib/env';
 
 export interface ApiError {
   message: string;

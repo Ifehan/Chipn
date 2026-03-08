@@ -1,6 +1,6 @@
 import React from 'react'
 import { TabButton } from '../atoms/TabButton'
-import { Clock, Crown, History, Plus } from "lucide-react"
+import { Crown } from "lucide-react"
 
 interface TabsContainerProps {
   activeTab: 'bills' | 'groups'

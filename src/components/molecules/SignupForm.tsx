@@ -96,7 +96,7 @@ export function SignupForm({ onSubmit, onBack, isLoading = false }: SignupFormPr
         >
           <option value="national_id">National ID</option>
           <option value="passport">Passport</option>
-          <option value="drivers_license">Driver's License</option>
+          <option value="drivers_license">Driver&apos;s License</option>
         </select>
       </div>
       <Input

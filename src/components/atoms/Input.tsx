@@ -20,8 +20,9 @@ export function Input({
   ...props
 }: InputProps) {
   const [showPassword, setShowPassword] = React.useState(false)
+  const generatedId = React.useId()
   const inputType = showPasswordToggle && showPassword ? 'text' : type
-  const inputId = id || React.useId()
+  const inputId = id || generatedId
 
   return (
     <div className="w-full">

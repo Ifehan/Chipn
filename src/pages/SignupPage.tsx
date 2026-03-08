@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AuthCard } from '../components/organisms/AuthCard'
-import { SignupForm, SignupData } from '../components/molecules/SignupForm'
+import type { SignupData } from '../components/molecules/SignupForm';
+import { SignupForm } from '../components/molecules/SignupForm'
 import { useNavigate } from 'react-router-dom'
 import { useCreateUser } from '../hooks/useUsers'
 
@@ -11,7 +12,7 @@ import { useCreateUser } from '../hooks/useUsers'
  */
 export function SignupPage() {
   const navigate = useNavigate()
-  const { createUser, loading, error } = useCreateUser()
+  const { createUser, loading } = useCreateUser()
   const [apiError, setApiError] = useState<string>('')
 
   const handleSignup = async (data: SignupData) => {
@@ -36,9 +37,9 @@ export function SignupPage() {
 
       // Redirect to login page after successful signup
       navigate('/login')
-    } catch (err: any) {
-      console.error('Signup failed:', err)
-      setApiError(err?.message || 'Failed to create account. Please try again.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : (err as { message?: string })?.message
+      setApiError(message || 'Failed to create account. Please try again.')
     }
   }
 

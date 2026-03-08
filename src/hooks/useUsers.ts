@@ -16,7 +16,6 @@ import type { ApiError } from '../services/api-client';
 import type {
   CreateUserRequest,
   UpdateUserRequest,
-  User,
 } from '../services';
 
 /**

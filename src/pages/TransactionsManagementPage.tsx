@@ -60,7 +60,7 @@ export function TransactionsManagementPage() {
 
         setTransactions(mockTransactions);
         setLoading(false);
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to fetch transactions');
         setLoading(false);
       }

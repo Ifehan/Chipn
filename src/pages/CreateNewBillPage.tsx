@@ -38,7 +38,7 @@ export function CreateNewBillPage() {
    */
   const normalizePhoneNumber = (phone: string): string => {
     // Remove all non-digit characters
-    let cleaned = phone.replace(/\D/g, '')
+    const cleaned = phone.replace(/\D/g, '')
 
     // Handle different formats
     if (cleaned.startsWith('254')) {
@@ -132,7 +132,7 @@ export function CreateNewBillPage() {
 
           <div className="bg-blue-50 rounded-lg p-3">
             <p className="text-sm text-blue-600 leading-relaxed">
-              You've already paid this bill. Add participants to request payment for their share.
+              You&apos;ve already paid this bill. Add participants to request payment for their share.
             </p>
           </div>
 
