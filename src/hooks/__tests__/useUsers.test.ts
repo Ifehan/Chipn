@@ -1,22 +1,21 @@
 /**
  * useUsers Hook Tests
- * Tests for all user-related custom hooks
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { renderHook, waitFor } from '@testing-library/react'
+import { act } from 'react'
+import React from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   useCreateUser,
   useCurrentUser,
   useGetUser,
   useUpdateUser,
   useUsers,
-} from '../useUsers';
-import { usersService } from '../../services';
-import type { ApiError } from '../../services/api-client';
-import type { User, CreateUserRequest, UpdateUserRequest } from '../../services';
+} from '../useUsers'
+import { usersService } from '../../services'
+import type { User, CreateUserRequest, UpdateUserRequest } from '../../services'
 
-// Mock the usersService
 jest.mock('../../services', () => ({
   usersService: {
     createUser: jest.fn(),
@@ -24,12 +23,22 @@ jest.mock('../../services', () => ({
     getUserById: jest.fn(),
     updateUser: jest.fn(),
   },
-}));
+}))
+
+function makeWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return React.createElement(QueryClientProvider, { client: queryClient }, children)
+  }
+  return Wrapper
+}
 
 describe('useUsers Hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
   const mockUser: User = {
     id: 'user123',
@@ -39,22 +48,16 @@ describe('useUsers Hooks', () => {
     phone_number: '+1234567890',
     id_type: 'passport',
     role: 'user',
-  };
-
-  const mockApiError: ApiError = {
-    message: 'API Error',
-    status: 400,
-    details: { field: 'error details' },
-  };
+  }
 
   describe('useCreateUser', () => {
     it('should initialize with correct default state', () => {
-      const { result } = renderHook(() => useCreateUser());
+      const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-      expect(typeof result.current.createUser).toBe('function');
-    });
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeNull()
+      expect(typeof result.current.createUser).toBe('function')
+    })
 
     it('should successfully create a user', async () => {
       const mockRequest: CreateUserRequest = {
@@ -64,26 +67,26 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
-      (usersService.createUser as jest.Mock).mockResolvedValue(mockUser);
+      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
 
-      const { result } = renderHook(() => useCreateUser());
+      const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
-      let returnedUser: User | undefined;
+      let returnedUser: User | undefined
 
       await act(async () => {
-        returnedUser = await result.current.createUser(mockRequest);
-      });
+        returnedUser = await result.current.createUser(mockRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.createUser).toHaveBeenCalledWith(mockRequest);
-      expect(returnedUser).toEqual(mockUser);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.createUser).toHaveBeenCalledWith(mockRequest)
+      expect(returnedUser).toEqual(mockUser)
+      expect(result.current.error).toBeNull()
+    })
 
     it('should set loading state during user creation', async () => {
       const mockRequest: CreateUserRequest = {
@@ -93,24 +96,24 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
-      (usersService.createUser as jest.Mock).mockImplementation(
+      ;(usersService.createUser as jest.Mock).mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve(mockUser), 100))
-      );
+      )
 
-      const { result } = renderHook(() => useCreateUser());
+      const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
       act(() => {
-        result.current.createUser(mockRequest);
-      });
+        result.current.createUser(mockRequest)
+      })
 
-      expect(result.current.loading).toBe(true);
+      expect(result.current.loading).toBe(true)
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-    });
+        expect(result.current.loading).toBe(false)
+      })
+    })
 
     it('should handle errors during user creation', async () => {
       const mockRequest: CreateUserRequest = {
@@ -120,25 +123,26 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
-      (usersService.createUser as jest.Mock).mockRejectedValue(mockApiError);
+      const err = new Error('API Error')
+      ;(usersService.createUser as jest.Mock).mockRejectedValue(err)
 
-      const { result } = renderHook(() => useCreateUser());
+      const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
       await act(async () => {
         try {
-          await result.current.createUser(mockRequest);
-        } catch (error) {
-          // Expected to throw
+          await result.current.createUser(mockRequest)
+        } catch {
+          // expected
         }
-      });
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-        expect(result.current.error).toEqual(mockApiError);
-      });
-    });
+        expect(result.current.loading).toBe(false)
+        expect(result.current.error).toEqual(err)
+      })
+    })
 
     it('should clear error on subsequent successful call', async () => {
       const mockRequest: CreateUserRequest = {
@@ -148,230 +152,183 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
-      (usersService.createUser as jest.Mock)
-        .mockRejectedValueOnce(mockApiError)
-        .mockResolvedValueOnce(mockUser);
+      const err = new Error('API Error')
+      ;(usersService.createUser as jest.Mock)
+        .mockRejectedValueOnce(err)
+        .mockResolvedValueOnce(mockUser)
 
-      const { result } = renderHook(() => useCreateUser());
+      const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
-      // First call - should fail
       await act(async () => {
         try {
-          await result.current.createUser(mockRequest);
-        } catch (error) {
-          // Expected to throw
+          await result.current.createUser(mockRequest)
+        } catch {
+          // expected
         }
-      });
+      })
 
       await waitFor(() => {
-        expect(result.current.error).toEqual(mockApiError);
-      });
+        expect(result.current.error).toEqual(err)
+      })
 
-      // Second call - should succeed
       await act(async () => {
-        await result.current.createUser(mockRequest);
-      });
+        await result.current.createUser(mockRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.error).toBeNull();
-      });
-    });
-  });
+        expect(result.current.error).toBeNull()
+      })
+    })
+  })
 
   describe('useCurrentUser', () => {
-    it('should initialize with correct default state', () => {
-      const { result } = renderHook(() => useCurrentUser());
+    it('should initialize with loading state while fetching', () => {
+      ;(usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser)
+      const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-      expect(typeof result.current.getCurrentUser).toBe('function');
-    });
+      // On mount it fires the query
+      expect(result.current.loading).toBe(true)
+      expect(result.current.user).toBeNull()
+    })
 
-    it('should successfully get current user', async () => {
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+    it('should expose user data after successful fetch', async () => {
+      ;(usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser)
 
-      const { result } = renderHook(() => useCurrentUser());
-
-      let returnedUser: User | undefined;
-
-      await act(async () => {
-        returnedUser = await result.current.getCurrentUser();
-      });
+      const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.getCurrentUser).toHaveBeenCalled();
-      expect(returnedUser).toEqual(mockUser);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.getCurrentUser).toHaveBeenCalled()
+      expect(result.current.user).toEqual(mockUser)
+      expect(result.current.error).toBeNull()
+    })
 
-    it('should handle unauthorized errors', async () => {
-      const unauthorizedError: ApiError = {
-        message: 'Unauthorized',
-        status: 401,
-      };
+    it('should expose error when fetch fails', async () => {
+      const err = new Error('Unauthorized')
+      ;(usersService.getCurrentUser as jest.Mock).mockRejectedValue(err)
 
-      (usersService.getCurrentUser as jest.Mock).mockRejectedValue(unauthorizedError);
-
-      const { result } = renderHook(() => useCurrentUser());
-
-      await act(async () => {
-        try {
-          await result.current.getCurrentUser();
-        } catch (error) {
-          // Expected to throw
-        }
-      });
+      const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-        expect(result.current.error).toEqual(unauthorizedError);
-      });
-    });
-  });
+        expect(result.current.loading).toBe(false)
+      })
+
+      expect(result.current.user).toBeNull()
+      expect(result.current.error).toEqual(err)
+    })
+  })
 
   describe('useGetUser', () => {
-    it('should initialize with correct default state', () => {
-      const { result } = renderHook(() => useGetUser());
+    it('should not fetch when userId is empty', () => {
+      const { result } = renderHook(() => useGetUser(''), { wrapper: makeWrapper() })
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-      expect(typeof result.current.getUserById).toBe('function');
-    });
+      expect(result.current.loading).toBe(false)
+      expect(usersService.getUserById).not.toHaveBeenCalled()
+    })
 
-    it('should successfully get user by ID', async () => {
-      const userId = 'user123';
-      (usersService.getUserById as jest.Mock).mockResolvedValue(mockUser);
+    it('should fetch and return user by ID', async () => {
+      const userId = 'user123'
+      ;(usersService.getUserById as jest.Mock).mockResolvedValue(mockUser)
 
-      const { result } = renderHook(() => useGetUser());
-
-      let returnedUser: User | undefined;
-
-      await act(async () => {
-        returnedUser = await result.current.getUserById(userId);
-      });
+      const { result } = renderHook(() => useGetUser(userId), { wrapper: makeWrapper() })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.getUserById).toHaveBeenCalledWith(userId);
-      expect(returnedUser).toEqual(mockUser);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.getUserById).toHaveBeenCalledWith(userId)
+      expect(result.current.user).toEqual(mockUser)
+      expect(result.current.error).toBeNull()
+    })
 
     it('should handle user not found errors', async () => {
-      const userId = 'nonexistent';
-      const notFoundError: ApiError = {
-        message: 'User not found',
-        status: 404,
-      };
+      const userId = 'nonexistent'
+      const err = new Error('User not found')
+      ;(usersService.getUserById as jest.Mock).mockRejectedValue(err)
 
-      (usersService.getUserById as jest.Mock).mockRejectedValue(notFoundError);
-
-      const { result } = renderHook(() => useGetUser());
-
-      await act(async () => {
-        try {
-          await result.current.getUserById(userId);
-        } catch (error) {
-          // Expected to throw
-        }
-      });
+      const { result } = renderHook(() => useGetUser(userId), { wrapper: makeWrapper() })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-        expect(result.current.error).toEqual(notFoundError);
-      });
-    });
-  });
+        expect(result.current.loading).toBe(false)
+      })
+
+      expect(result.current.user).toBeNull()
+      expect(result.current.error).toEqual(err)
+    })
+  })
 
   describe('useUpdateUser', () => {
     it('should initialize with correct default state', () => {
-      const { result } = renderHook(() => useUpdateUser());
+      const { result } = renderHook(() => useUpdateUser(), { wrapper: makeWrapper() })
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-      expect(typeof result.current.updateUser).toBe('function');
-    });
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeNull()
+      expect(typeof result.current.updateUser).toBe('function')
+    })
 
     it('should successfully update user', async () => {
-      const userId = 'user123';
+      const userId = 'user123'
       const updateRequest: UpdateUserRequest = {
         first_name: 'Jane',
         last_name: 'Smith',
-      };
+      }
 
-      const updatedUser: User = {
-        ...mockUser,
-        first_name: 'Jane',
-        last_name: 'Smith',
-      };
+      const updatedUser: User = { ...mockUser, first_name: 'Jane', last_name: 'Smith' }
+      ;(usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser)
 
-      (usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser);
+      const { result } = renderHook(() => useUpdateUser(), { wrapper: makeWrapper() })
 
-      const { result } = renderHook(() => useUpdateUser());
-
-      let returnedUser: User | undefined;
+      let returnedUser: User | undefined
 
       await act(async () => {
-        returnedUser = await result.current.updateUser(userId, updateRequest);
-      });
+        returnedUser = await result.current.updateUser(userId, updateRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest);
-      expect(returnedUser).toEqual(updatedUser);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest)
+      expect(returnedUser).toEqual(updatedUser)
+      expect(result.current.error).toBeNull()
+    })
 
     it('should handle validation errors', async () => {
-      const userId = 'user123';
-      const updateRequest: UpdateUserRequest = {
-        email: 'invalid-email',
-      };
+      const userId = 'user123'
+      const updateRequest: UpdateUserRequest = { email: 'invalid-email' }
+      const err = new Error('Invalid email format')
+      ;(usersService.updateUser as jest.Mock).mockRejectedValue(err)
 
-      const validationError: ApiError = {
-        message: 'Invalid email format',
-        status: 400,
-      };
-
-      (usersService.updateUser as jest.Mock).mockRejectedValue(validationError);
-
-      const { result } = renderHook(() => useUpdateUser());
+      const { result } = renderHook(() => useUpdateUser(), { wrapper: makeWrapper() })
 
       await act(async () => {
         try {
-          await result.current.updateUser(userId, updateRequest);
-        } catch (error) {
-          // Expected to throw
+          await result.current.updateUser(userId, updateRequest)
+        } catch {
+          // expected
         }
-      });
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-        expect(result.current.error).toEqual(validationError);
-      });
-    });
-  });
+        expect(result.current.loading).toBe(false)
+        expect(result.current.error).toEqual(err)
+      })
+    })
+  })
 
   describe('useUsers (combined hook)', () => {
     it('should initialize with correct default state', () => {
-      const { result } = renderHook(() => useUsers());
+      const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-      expect(typeof result.current.createUser).toBe('function');
-      expect(typeof result.current.getCurrentUser).toBe('function');
-      expect(typeof result.current.getUserById).toBe('function');
-      expect(typeof result.current.updateUser).toBe('function');
-    });
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeNull()
+      expect(typeof result.current.createUser).toBe('function')
+      expect(typeof result.current.updateUser).toBe('function')
+    })
 
     it('should successfully create user using combined hook', async () => {
       const mockRequest: CreateUserRequest = {
@@ -381,108 +338,49 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
-      (usersService.createUser as jest.Mock).mockResolvedValue(mockUser);
+      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
 
-      const { result } = renderHook(() => useUsers());
-
-      await act(async () => {
-        await result.current.createUser(mockRequest);
-      });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(usersService.createUser).toHaveBeenCalledWith(mockRequest);
-      expect(result.current.error).toBeNull();
-    });
-
-    it('should successfully get current user using combined hook', async () => {
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
-
-      const { result } = renderHook(() => useUsers());
+      const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
       await act(async () => {
-        await result.current.getCurrentUser();
-      });
+        await result.current.createUser(mockRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.getCurrentUser).toHaveBeenCalled();
-      expect(result.current.error).toBeNull();
-    });
-
-    it('should successfully get user by ID using combined hook', async () => {
-      const userId = 'user123';
-      (usersService.getUserById as jest.Mock).mockResolvedValue(mockUser);
-
-      const { result } = renderHook(() => useUsers());
-
-      await act(async () => {
-        await result.current.getUserById(userId);
-      });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(usersService.getUserById).toHaveBeenCalledWith(userId);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.createUser).toHaveBeenCalledWith(mockRequest)
+      expect(result.current.error).toBeNull()
+    })
 
     it('should successfully update user using combined hook', async () => {
-      const userId = 'user123';
-      const updateRequest: UpdateUserRequest = {
-        first_name: 'Jane',
-      };
+      const userId = 'user123'
+      const updateRequest: UpdateUserRequest = { first_name: 'Jane' }
+      const updatedUser: User = { ...mockUser, first_name: 'Jane' }
+      ;(usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser)
 
-      const updatedUser: User = {
-        ...mockUser,
-        first_name: 'Jane',
-      };
-
-      (usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser);
-
-      const { result } = renderHook(() => useUsers());
+      const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
       await act(async () => {
-        await result.current.updateUser(userId, updateRequest);
-      });
+        await result.current.updateUser(userId, updateRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest);
-      expect(result.current.error).toBeNull();
-    });
+      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest)
+      expect(result.current.error).toBeNull()
+    })
 
-    it('should share loading state across all operations', async () => {
-      (usersService.getCurrentUser as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockUser), 100))
-      );
+    it('should set error when createUser fails', async () => {
+      const err = new Error('API Error')
+      ;(usersService.createUser as jest.Mock).mockRejectedValue(err)
 
-      const { result } = renderHook(() => useUsers());
-
-      act(() => {
-        result.current.getCurrentUser();
-      });
-
-      expect(result.current.loading).toBe(true);
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-    });
-
-    it('should share error state across all operations', async () => {
-      (usersService.createUser as jest.Mock).mockRejectedValue(mockApiError);
-
-      const { result } = renderHook(() => useUsers());
+      const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
       const mockRequest: CreateUserRequest = {
         first_name: 'John',
@@ -491,56 +389,54 @@ describe('useUsers Hooks', () => {
         phone_number: '+1234567890',
         id_type: 'passport',
         password: 'securePassword123',
-      };
+      }
 
       await act(async () => {
         try {
-          await result.current.createUser(mockRequest);
-        } catch (error) {
-          // Expected to throw
+          await result.current.createUser(mockRequest)
+        } catch {
+          // expected
         }
-      });
+      })
 
       await waitFor(() => {
-        expect(result.current.error).toEqual(mockApiError);
-      });
-    });
+        expect(result.current.error).toEqual(err)
+      })
+    })
 
-    it('should handle multiple sequential operations', async () => {
-      const userId = 'user123';
-      const updateRequest: UpdateUserRequest = {
-        first_name: 'Jane',
-      };
+    it('should handle sequential create then update operations', async () => {
+      const userId = 'user123'
+      const updateRequest: UpdateUserRequest = { first_name: 'Jane' }
 
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
-      (usersService.updateUser as jest.Mock).mockResolvedValue({
-        ...mockUser,
-        first_name: 'Jane',
-      });
+      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.updateUser as jest.Mock).mockResolvedValue({ ...mockUser, first_name: 'Jane' })
 
-      const { result } = renderHook(() => useUsers());
+      const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
-      // First operation
+      const mockRequest: CreateUserRequest = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john.doe@example.com',
+        phone_number: '+1234567890',
+        id_type: 'passport',
+        password: 'securePassword123',
+      }
+
       await act(async () => {
-        await result.current.getCurrentUser();
-      });
+        await result.current.createUser(mockRequest)
+      })
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      // Second operation
       await act(async () => {
-        await result.current.updateUser(userId, updateRequest);
-      });
+        await result.current.updateUser(userId, updateRequest)
+      })
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.loading).toBe(false)
+      })
 
-      expect(usersService.getCurrentUser).toHaveBeenCalled();
-      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest);
-      expect(result.current.error).toBeNull();
-    });
-  });
-});
+      expect(usersService.createUser).toHaveBeenCalled()
+      expect(usersService.updateUser).toHaveBeenCalledWith(userId, updateRequest)
+      expect(result.current.error).toBeNull()
+    })
+  })
+})
