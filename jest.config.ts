@@ -8,6 +8,9 @@ const config: Config = {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/lib/env$': '<rootDir>/src/lib/__mocks__/env.ts',
+    '^../lib/env$': '<rootDir>/src/lib/__mocks__/env.ts',
+    '^../../lib/env$': '<rootDir>/src/lib/__mocks__/env.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
@@ -26,7 +29,6 @@ const config: Config = {
     '!src/App.tsx',
     '!src/**/index.ts',
     '!src/**/index.tsx',
-    '!src/services/api-client.ts',
   ],
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   coverageThreshold: {
