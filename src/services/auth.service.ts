@@ -9,15 +9,13 @@
  */
 
 import { apiClient } from './api-client';
+import { getAccessToken, setAccessToken } from './token-store';
 import type {
   LoginRequest,
   LoginResponse,
   PasswordResetRequest,
   PasswordResetResponse,
 } from './types/auth.types';
-
-// C-4: Access token lives only in memory — not in localStorage
-let _accessToken: string | null = null;
 
 export class AuthService {
   private readonly basePath = '/auth';
@@ -35,7 +33,7 @@ export class AuthService {
     );
 
     if (response.access_token) {
-      _accessToken = response.access_token;
+      setAccessToken(response.access_token);
     }
 
     return response;
@@ -55,12 +53,12 @@ export class AuthService {
       );
 
       if (response.access_token) {
-        _accessToken = response.access_token;
+        setAccessToken(response.access_token);
         return response.access_token;
       }
       return null;
     } catch {
-      _accessToken = null;
+      setAccessToken(null);
       return null;
     }
   }
@@ -79,7 +77,7 @@ export class AuthService {
     } catch {
       // Best-effort — clear locally even if server call fails
     } finally {
-      _accessToken = null;
+      setAccessToken(null);
     }
   }
 
@@ -99,14 +97,14 @@ export class AuthService {
    * The app should call refreshAccessToken() on startup to restore a session.
    */
   hasToken(): boolean {
-    return _accessToken !== null;
+    return getAccessToken() !== null;
   }
 
   /**
    * Returns the in-memory access token (never touches localStorage).
    */
   getAccessToken(): string | null {
-    return _accessToken;
+    return getAccessToken();
   }
 }
 

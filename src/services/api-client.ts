@@ -9,6 +9,7 @@
  */
 
 import { API_BASE_URL } from '../lib/env';
+import { getAccessToken, setAccessToken } from './token-store';
 
 export interface ApiError {
   message: string;
@@ -25,9 +26,7 @@ export class ApiClient {
   }
 
   private getAccessToken(): string | null {
-    // Lazy import to avoid circular dependency
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./auth.service').authService.getAccessToken();
+    return getAccessToken();
   }
 
   private buildConfig(options: RequestInit = {}, tokenOverride?: string | null): RequestInit {
@@ -62,9 +61,7 @@ export class ApiClient {
 
       const data = await res.json();
       if (data.access_token) {
-        // Update in-memory token via authService
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./auth.service')._accessToken = data.access_token;
+        setAccessToken(data.access_token as string);
         return data.access_token as string;
       }
       return null;
