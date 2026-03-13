@@ -13,56 +13,112 @@ export interface ApiError {
 
 export class ApiClient {
   private baseUrl: string;
+  private isRefreshing = false;
+  private refreshQueue: Array<(token: string | null) => void> = [];
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
+  }
+
+  private buildConfig(options: RequestInit = {}, token?: string | null): RequestInit {
+    const authToken = token ?? localStorage.getItem('authToken');
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+    };
+    return config;
+  }
+
+  private redirectToLogin(): void {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('isAuthenticated');
+    if (window.location.pathname !== '/login') {
+      window.location.assign('/login');
+    }
+  }
+
+  private async attemptTokenRefresh(): Promise<string | null> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return null;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+      }
+      if (data.refresh_token) {
+        localStorage.setItem('refreshToken', data.refresh_token);
+      }
+      return data.access_token ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Skip auto-refresh for auth endpoints to avoid loops
+    const isAuthEndpoint = endpoint.startsWith('/auth/');
+
     const url = `${this.baseUrl}${endpoint}`;
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    };
-
-    // Add auth token if available
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
+    const config = this.buildConfig(options);
 
     try {
       const response = await fetch(url, config);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
-        // Handle 401 Unauthorized - clear auth and redirect to login
-        if (response.status === 401) {
-          localStorage.removeItem('authToken');
-          sessionStorage.removeItem('isAuthenticated');
-
-          // Only redirect if we're not already on the login page
-          if (window.location.pathname !== '/login') {
-            // Use assign for better compatibility, fallback to href
-            if (typeof window.location.assign === 'function') {
-              window.location.assign('/login');
-            } else {
-              window.location.href = '/login';
-            }
+      if (response.status === 401 && !isAuthEndpoint) {
+        // Queue concurrent 401s behind a single refresh call
+        if (this.isRefreshing) {
+          const newToken = await new Promise<string | null>((resolve) => {
+            this.refreshQueue.push(resolve);
+          });
+          if (!newToken) throw { message: 'Session expired', status: 401 } as ApiError;
+          const retryResponse = await fetch(url, this.buildConfig(options, newToken));
+          if (!retryResponse.ok) {
+            const errData = await retryResponse.json().catch(() => ({}));
+            throw { message: errData.detail || `HTTP error! status: ${retryResponse.status}`, status: retryResponse.status } as ApiError;
           }
+          if (retryResponse.status === 204) return {} as T;
+          return retryResponse.json();
         }
 
+        this.isRefreshing = true;
+        const newToken = await this.attemptTokenRefresh();
+        this.isRefreshing = false;
+        this.refreshQueue.forEach((resolve) => resolve(newToken));
+        this.refreshQueue = [];
+
+        if (!newToken) {
+          this.redirectToLogin();
+          throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
+        }
+
+        const retryResponse = await fetch(url, this.buildConfig(options, newToken));
+        if (!retryResponse.ok) {
+          const errData = await retryResponse.json().catch(() => ({}));
+          throw { message: errData.detail || `HTTP error! status: ${retryResponse.status}`, status: retryResponse.status } as ApiError;
+        }
+        if (retryResponse.status === 204) return {} as T;
+        return retryResponse.json();
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         const error: ApiError = {
           message: errorData.message || errorData.detail || `HTTP error! status: ${response.status}`,
           status: response.status,
@@ -71,7 +127,6 @@ export class ApiClient {
         throw error;
       }
 
-      // Handle 204 No Content
       if (response.status === 204) {
         return {} as T;
       }

@@ -8,8 +8,22 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.password_reset import PasswordResetToken
 from app.models.user import User
-from app.schemas.auth import LoginRequest, LoginResponse, PasswordResetRequest, PasswordResetResponse
-from app.services.auth import create_access_token, hash_password, verify_password
+from app.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    LogoutRequest,
+    PasswordResetRequest,
+    PasswordResetResponse,
+    RefreshRequest,
+)
+from app.services.auth import (
+    create_access_token,
+    create_refresh_token,
+    hash_password,
+    revoke_refresh_token,
+    verify_password,
+    verify_refresh_token,
+)
 from app.services.email import send_password_reset_email
 from app.config import settings
 
@@ -26,8 +40,48 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="Invalid email or password",
         )
 
-    token, expires_in = create_access_token(subject=user.id)
-    return LoginResponse(access_token=token, expires_in=expires_in)
+    access_token, expires_in = create_access_token(subject=user.id)
+    refresh_token, refresh_expires_in = create_refresh_token(user_id=user.id, db=db)
+
+    return LoginResponse(
+        access_token=access_token,
+        expires_in=expires_in,
+        refresh_token=refresh_token,
+        refresh_token_expires_in=refresh_expires_in,
+    )
+
+
+@router.post("/refresh", response_model=LoginResponse)
+def refresh_token(request: RefreshRequest, db: Session = Depends(get_db)):
+    user_id = verify_refresh_token(request.refresh_token, db)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    # Rotate: revoke old token, issue new pair
+    revoke_refresh_token(request.refresh_token, db)
+    access_token, expires_in = create_access_token(subject=user.id)
+    new_refresh_token, refresh_expires_in = create_refresh_token(user_id=user.id, db=db)
+
+    return LoginResponse(
+        access_token=access_token,
+        expires_in=expires_in,
+        refresh_token=new_refresh_token,
+        refresh_token_expires_in=refresh_expires_in,
+    )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(request: LogoutRequest, db: Session = Depends(get_db)):
+    revoke_refresh_token(request.refresh_token, db)
+
 
 
 @router.post("/password-reset/request", response_model=PasswordResetResponse)

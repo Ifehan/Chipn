@@ -10,7 +10,7 @@ interface AuthContextType {
   error: string | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
 
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(apiErr.message || 'Failed to fetch user data')
 
       if (apiErr?.status === 401) {
-        authService.logout()
+        await authService.logout()
         setUser(null)
       }
     } finally {
@@ -91,14 +91,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Logout handler
-   * Clears auth state and redirects to login
+   * Revokes refresh token on the server, clears auth state and redirects to login
    */
-  const logout = () => {
-    authService.logout()
+  const logout = useCallback(async () => {
+    await authService.logout()
     setUser(null)
     setError(null)
     navigate('/login', { replace: true })
-  }
+  }, [navigate])
 
   /**
    * Refresh user data

@@ -13,12 +13,21 @@ export interface LoginRequest {
 }
 
 /**
- * Response body for POST /auth/login
+ * Response body for POST /auth/login and POST /auth/refresh
  */
 export interface LoginResponse {
   access_token: string;
   token_type: string;
   expires_in: number;
+  refresh_token: string;
+  refresh_token_expires_in: number;
+}
+
+/**
+ * Request body for POST /auth/logout
+ */
+export interface LogoutRequest {
+  refresh_token: string;
 }
 
 /**

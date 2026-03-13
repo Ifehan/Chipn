@@ -22,6 +22,8 @@ describe('AuthService', () => {
         access_token: 'test-token-123',
         token_type: 'bearer',
         expires_in: 3600,
+        refresh_token: 'refresh-token-abc',
+        refresh_token_expires_in: 2592000,
       };
 
       (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
@@ -96,11 +98,39 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should clear the auth token from localStorage', () => {
+    it('should revoke refresh token and clear tokens from localStorage', async () => {
+      localStorage.setItem('authToken', 'test-token');
+      localStorage.setItem('refreshToken', 'test-refresh-token');
+
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+      await authService.logout();
+
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/logout', {
+        refresh_token: 'test-refresh-token',
+      });
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(localStorage.getItem('refreshToken')).toBeNull();
+    });
+
+    it('should clear tokens even if server call fails', async () => {
+      localStorage.setItem('authToken', 'test-token');
+      localStorage.setItem('refreshToken', 'test-refresh-token');
+
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue({ status: 500 });
+
+      await authService.logout();
+
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(localStorage.getItem('refreshToken')).toBeNull();
+    });
+
+    it('should clear tokens even when no refresh token is present', async () => {
       localStorage.setItem('authToken', 'test-token');
 
-      authService.logout();
+      await authService.logout();
 
+      expect(apiClient.post).not.toHaveBeenCalled();
       expect(localStorage.getItem('authToken')).toBeNull();
     });
   });

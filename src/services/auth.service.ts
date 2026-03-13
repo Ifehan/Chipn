@@ -12,6 +12,7 @@ import { apiClient } from './api-client';
 import type {
   LoginRequest,
   LoginResponse,
+  LogoutRequest,
   PasswordResetRequest,
   PasswordResetResponse,
 } from './types/auth.types';
@@ -46,8 +47,40 @@ export class AuthService {
     if (response.access_token) {
       localStorage.setItem('authToken', response.access_token);
     }
+    if (response.refresh_token) {
+      localStorage.setItem('refreshToken', response.refresh_token);
+    }
 
     return response;
+  }
+
+  /**
+   * Refresh access token using stored refresh token
+   * POST /auth/refresh
+   * Returns new access token, or null if refresh token is invalid/missing
+   */
+  async refreshAccessToken(): Promise<string | null> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return null;
+
+    try {
+      const response = await apiClient.post<LoginResponse>(
+        `${this.basePath}/refresh`,
+        { refresh_token: refreshToken }
+      );
+
+      if (response.access_token) {
+        localStorage.setItem('authToken', response.access_token);
+      }
+      if (response.refresh_token) {
+        localStorage.setItem('refreshToken', response.refresh_token);
+      }
+
+      return response.access_token;
+    } catch {
+      this.logout();
+      return null;
+    }
   }
 
   /**
@@ -76,10 +109,19 @@ export class AuthService {
 
   /**
    * Logout user
-   * Clears authentication tokens from storage
+   * Revokes refresh token on the backend, then clears all tokens from storage
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      try {
+        await apiClient.post<void>(`${this.basePath}/logout`, { refresh_token: refreshToken } as LogoutRequest);
+      } catch {
+        // Best-effort: clear locally even if server call fails
+      }
+    }
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
   }
 
   /**
@@ -96,6 +138,13 @@ export class AuthService {
    */
   getAccessToken(): string | null {
     return localStorage.getItem('authToken');
+  }
+
+  /**
+   * Get stored refresh token
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
   }
 }
 

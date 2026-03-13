@@ -16,7 +16,7 @@ vi.mock('../../services/auth.service', () => ({
   authService: {
     hasToken: vi.fn(),
     login: vi.fn(),
-    logout: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
   },
 }));
 vi.mock('../../services/users.service', () => ({
@@ -212,7 +212,7 @@ describe('AuthContext & useAuth Hook', () => {
       });
 
       await act(async () => {
-        result.current.logout();
+        await result.current.logout();
       });
 
       expect(authService.logout).toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe('AuthContext & useAuth Hook', () => {
       });
 
       await act(async () => {
-        result.current.logout();
+        await result.current.logout();
       });
 
       expect(result.current.error).toBeNull();

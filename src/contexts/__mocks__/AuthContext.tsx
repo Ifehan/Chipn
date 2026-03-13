@@ -18,7 +18,7 @@ const mockAuthContextValue = {
   error: null,
   isAuthenticated: true,
   login: jest.fn().mockResolvedValue(undefined),
-  logout: jest.fn(),
+  logout: jest.fn().mockResolvedValue(undefined),
   refreshUser: jest.fn().mockResolvedValue(undefined),
 }
 
