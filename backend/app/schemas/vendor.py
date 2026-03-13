@@ -11,3 +11,8 @@ class VendorResponse(BaseModel):
     paybill_number: str
     created_at: datetime
     updated_at: datetime
+
+
+class CreateVendorRequest(BaseModel):
+    name: str
+    paybill_number: str
