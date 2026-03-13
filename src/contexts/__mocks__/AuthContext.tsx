@@ -17,9 +17,9 @@ const mockAuthContextValue = {
   loading: false,
   error: null,
   isAuthenticated: true,
-  login: jest.fn().mockResolvedValue(undefined),
-  logout: jest.fn().mockResolvedValue(undefined),
-  refreshUser: jest.fn().mockResolvedValue(undefined),
+  login: vi.fn().mockResolvedValue(undefined),
+  logout: vi.fn().mockResolvedValue(undefined),
+  refreshUser: vi.fn().mockResolvedValue(undefined),
 }
 
 // Mock AuthProvider component
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 }
 
 // Mock useAuth hook
-export const useAuth = jest.fn(() => mockAuthContextValue)
+export const useAuth = vi.fn(() => mockAuthContextValue)
 
 // Export mock values for test customization
 export const mockAuthContext = mockAuthContextValue

@@ -1,6 +1,7 @@
 // Mock the api-client to avoid import.meta issues
 vi.mock('../../services/api-client');
 vi.mock('../../hooks/useUsers', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await importOriginal<typeof import('../../hooks/useUsers')>();
   return {
     ...actual,
@@ -263,9 +264,14 @@ describe('ProfileSettingsPage', () => {
         email: 'john@example.com',
         phone_number: '+254712345678',
         id_type: 'passport',
+        role: 'user' as const,
       },
       loading: false,
+      error: null,
+      isAuthenticated: true,
+      login: vi.fn(),
       logout: mockLogout,
+      refreshUser: vi.fn(),
     });
 
     await act(async () => {

@@ -8,7 +8,7 @@ vi.mock('../../services/api-client', () => ({
   },
 }));
 
-const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
+const mockedApiClient = apiClient as any;
 
 describe('Dashboard Service', () => {
   beforeEach(() => {

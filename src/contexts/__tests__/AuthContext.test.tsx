@@ -39,6 +39,7 @@ const mockUser: User = {
   last_name: 'Doe',
   phone_number: '254712345678',
   id_type: 'national_id',
+  role: 'user',
 };
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -57,7 +58,7 @@ describe('AuthContext & useAuth Hook', () => {
   describe('useAuth Hook Initialization', () => {
     it('should throw error when used outside AuthProvider', () => {
       // Suppress error output for this test
-      const consoleError = vi.spyOn(console, 'error').mockImplementation();
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       expect(() => {
         renderHook(() => useAuth());

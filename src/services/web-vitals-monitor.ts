@@ -53,7 +53,7 @@ export class WebVitalsMonitor {
           }
         });
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-      } catch (e) {
+      } catch (_e) {
         // LCP not supported
       }
 
@@ -66,7 +66,7 @@ export class WebVitalsMonitor {
           }
         });
         fcpObserver.observe({ entryTypes: ['paint'] });
-      } catch (e) {
+      } catch (_e) {
         // FCP not supported
       }
 
@@ -75,13 +75,15 @@ export class WebVitalsMonitor {
         let clsValue = 0;
         const clsObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if ((entry as any).hadRecentInput) continue;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((entry as any).hadRecentInput) continue;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clsValue += (entry as any).value;
           }
           this.recordVital('CLS', clsValue);
         });
         clsObserver.observe({ entryTypes: ['layout-shift'] });
-      } catch (e) {
+      } catch (_e) {
         // CLS not supported
       }
     }
@@ -89,6 +91,7 @@ export class WebVitalsMonitor {
     // Track TTFB (Time to First Byte)
     if ('PerformanceNavigationTiming' in window) {
       window.addEventListener('load', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const navigation = performance.getEntriesByType('navigation')[0] as any;
         if (navigation?.responseStart) {
           this.recordVital('TTFB', navigation.responseStart);

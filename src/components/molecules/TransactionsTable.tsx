@@ -8,7 +8,21 @@ type Tx = {
   time: string
 }
 
-export function TransactionsTable({ transactions }: { transactions: Tx[] }) {
+interface TransactionsTableProps {
+  transactions: Tx[]
+  currentPage?: number
+  totalPages?: number
+  totalItems?: number
+  onPageChange?: (page: number) => void
+  onSizeChange?: (size: number) => void
+}
+
+export function TransactionsTable({
+  transactions,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: TransactionsTableProps) {
   const statusClass = (s: string) => {
     if (s.toLowerCase() === 'success') return 'bg-green-100 text-green-700'
     if (s.toLowerCase() === 'pending') return 'bg-yellow-100 text-yellow-700'
@@ -42,6 +56,27 @@ export function TransactionsTable({ transactions }: { transactions: Tx[] }) {
           ))}
         </tbody>
       </table>
+      {totalPages !== undefined && totalPages > 1 && onPageChange && (
+        <div className="flex items-center justify-between pt-4 border-t mt-2">
+          <button
+            className="px-3 py-1 text-sm rounded border border-slate-300 disabled:opacity-40"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange((currentPage ?? 1) - 1)}
+          >
+            Previous
+          </button>
+          <span className="text-sm text-slate-500">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="px-3 py-1 text-sm rounded border border-slate-300 disabled:opacity-40"
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange((currentPage ?? 1) + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }

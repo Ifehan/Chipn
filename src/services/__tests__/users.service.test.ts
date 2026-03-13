@@ -39,6 +39,7 @@ describe('UsersService', () => {
         email: 'john.doe@example.com',
         phone_number: '+1234567890',
         id_type: 'passport',
+        id_number: 'AB123456',
         password: 'securePassword123',
       };
 
@@ -71,6 +72,7 @@ describe('UsersService', () => {
         email: 'existing@example.com',
         phone_number: '+1234567890',
         id_type: 'passport',
+        id_number: 'AB123456',
         password: 'securePassword123',
       };
 
@@ -91,6 +93,7 @@ describe('UsersService', () => {
         email: 'john@example.com',
         phone_number: '+1234567890',
         id_type: 'passport',
+        id_number: 'AB123456',
         password: 'short',
       };
 

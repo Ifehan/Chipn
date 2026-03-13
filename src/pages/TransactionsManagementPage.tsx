@@ -7,14 +7,6 @@ import { dashboardService } from '../services/dashboard.service';
 import { logger } from '../services'
 import type { DashboardTransaction, RecentTransactionsResponse } from '../services/types/dashboard.types';
 
-type Transaction = {
-  id: string;
-  vendor: string;
-  amount: string;
-  status: 'Success' | 'Pending' | 'Failed' | string;
-  time: string;
-};
-
 export function TransactionsManagementPage() {
   const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
   const [loading, setLoading] = useState(true);

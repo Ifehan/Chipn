@@ -7,7 +7,8 @@
  * const HomePage = lazyComponent(() => import('./pages/HomePage'))
  */
 
-import React, { Suspense, lazy as reactLazy, ComponentType } from 'react'
+import type { ComponentType } from 'react';
+import React, { Suspense, lazy as reactLazy } from 'react'
 
 interface LazyComponentProps {
   loading?: React.ReactNode
@@ -20,7 +21,7 @@ interface LazyComponentProps {
  * @param options - Configuration options
  * @returns Memoized lazy component with Suspense wrapper
  */
-export function lazyComponent<P extends JSX.IntrinsicAttributes>(
+export function lazyComponent<P extends React.JSX.IntrinsicAttributes>(
   importFunc: () => Promise<{ default: ComponentType<P> }>,
   options?: LazyComponentProps
 ) {
@@ -31,6 +32,7 @@ export function lazyComponent<P extends JSX.IntrinsicAttributes>(
   const WrappedComponent = React.memo((props: P) => (
     <Suspense fallback={FallbackComponent}>
       <ErrorBoundary fallback={ErrorComponent}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <LazyComponent {...(props as any)} />
       </ErrorBoundary>
     </Suspense>

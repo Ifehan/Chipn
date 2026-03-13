@@ -139,7 +139,7 @@ describe('SignupPage', () => {
   });
 
   it('displays generic error message when error has no message', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup({ delay: null });
 
     mockCreateUser.mockRejectedValueOnce(new Error());
@@ -183,7 +183,7 @@ describe('SignupPage', () => {
   });
 
   it('logs successful user creation', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const user = userEvent.setup({ delay: null });
     renderSignupPage();
 

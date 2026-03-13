@@ -76,7 +76,7 @@ const mockTransactionsResponse = {
   size: 10,
 };
 
-const mockedDashboardService = dashboardService as jest.Mocked<typeof dashboardService>;
+const mockedDashboardService = dashboardService as any;
 
 describe('TransactionsManagementPage', () => {
   beforeEach(() => {

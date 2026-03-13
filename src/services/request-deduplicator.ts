@@ -5,6 +5,7 @@
  */
 
 export class RequestDeduplicator {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pendingRequests: Map<string, Promise<any>> = new Map()
 
   /**

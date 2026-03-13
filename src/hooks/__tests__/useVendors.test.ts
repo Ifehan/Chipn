@@ -14,8 +14,9 @@ const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   });
-  return ({ children }: { children: React.ReactNode }) =>
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children);
+  return Wrapper;
 };
 
 // Mock the vendor service
@@ -106,7 +107,7 @@ describe('useVendors', () => {
     (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
@@ -165,7 +166,7 @@ describe('useVendors', () => {
     };
 
     // Suppress console.error for this test
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // First call fails
     (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValueOnce(mockError);
@@ -202,7 +203,7 @@ describe('useVendors', () => {
     (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(timeoutError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
@@ -225,7 +226,7 @@ describe('useVendors', () => {
     (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(unauthorizedError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
