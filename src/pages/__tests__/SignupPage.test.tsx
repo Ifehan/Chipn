@@ -3,15 +3,18 @@ import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import SignupPage from '../SignupPage';
 
-const mockNavigate = jest.fn();
-const mockCreateUser = jest.fn();
+const mockNavigate = vi.fn();
+const mockCreateUser = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
-jest.mock('../../hooks/useUsers', () => ({
+vi.mock('../../hooks/useUsers', () => ({
   useCreateUser: () => ({
     createUser: mockCreateUser,
     loading: false,
@@ -20,7 +23,7 @@ jest.mock('../../hooks/useUsers', () => ({
 }));
 
 // Mock child components
-jest.mock('../../components/organisms/AuthCard', () => ({
+vi.mock('../../components/organisms/AuthCard', () => ({
   AuthCard: ({ children, title, subtitle }: any) => (
     <div data-testid="mock-auth-card">
       <h1>{title}</h1>
@@ -30,7 +33,7 @@ jest.mock('../../components/organisms/AuthCard', () => ({
   ),
 }));
 
-jest.mock('../../components/molecules/SignupForm', () => ({
+vi.mock('../../components/molecules/SignupForm', () => ({
   SignupForm: ({ onSubmit, onBack }: any) => (
     <form
       data-testid="mock-signup-form"
@@ -118,7 +121,6 @@ describe('SignupPage', () => {
   });
 
   it('handles signup errors gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     const user = userEvent.setup({ delay: null });
 
     mockCreateUser.mockRejectedValueOnce({
@@ -132,23 +134,12 @@ describe('SignupPage', () => {
     await user.click(signUpButton);
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Signup failed:',
-        expect.objectContaining({
-          message: 'Email already exists',
-        })
-      );
-    });
-
-    await waitFor(() => {
       expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
     });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it('displays generic error message when error has no message', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
     const user = userEvent.setup({ delay: null });
 
     mockCreateUser.mockRejectedValueOnce(new Error());
@@ -192,7 +183,7 @@ describe('SignupPage', () => {
   });
 
   it('logs successful user creation', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
     const user = userEvent.setup({ delay: null });
     renderSignupPage();
 

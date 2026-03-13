@@ -93,7 +93,7 @@ describe('TabButton Component', () => {
   describe('Interactions', () => {
     it('calls onClick handler when clicked', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<TabButton label="Clickable" active={false} onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -104,7 +104,7 @@ describe('TabButton Component', () => {
 
     it('calls onClick when active', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<TabButton label="Active Tab" active={true} onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -115,7 +115,7 @@ describe('TabButton Component', () => {
 
     it('calls onClick multiple times', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<TabButton label="Multi Click" active={false} onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -128,7 +128,7 @@ describe('TabButton Component', () => {
 
     it('is keyboard accessible with Enter key', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<TabButton label="Keyboard Tab" active={false} onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -141,7 +141,7 @@ describe('TabButton Component', () => {
 
     it('is keyboard accessible with Space key', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<TabButton label="Space Tab" active={false} onClick={handleClick} />);
 
       const button = screen.getByRole('button');

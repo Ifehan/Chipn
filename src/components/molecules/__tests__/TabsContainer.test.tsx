@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import TabsContainer from '../TabsContainer';
 
 describe('TabsContainer', () => {
-  const mockOnTabChange = jest.fn();
+  const mockOnTabChange = vi.fn();
 
   beforeEach(() => {
     mockOnTabChange.mockClear();

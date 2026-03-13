@@ -3,15 +3,18 @@ import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import WelcomePage from '../WelcomePage';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
 // Mock child components
-jest.mock('../../components/organisms/AuthCard', () => ({
+vi.mock('../../components/organisms/AuthCard', () => ({
   AuthCard: ({ children, title, subtitle }: any) => (
     <div data-testid="mock-auth-card">
       <h1>{title}</h1>
@@ -21,7 +24,7 @@ jest.mock('../../components/organisms/AuthCard', () => ({
   ),
 }));
 
-jest.mock('../../components/atoms/Button', () => ({
+vi.mock('../../components/atoms/Button', () => ({
   Button: ({ children, onClick, variant }: any) => (
     <button data-testid={`button-${variant}`} onClick={onClick}>
       {children}

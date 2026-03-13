@@ -8,11 +8,11 @@ import { apiClient } from '../api-client';
 import type { Vendor } from '../types/vendor.types';
 
 // Mock the API client
-jest.mock('../api-client');
+vi.mock('../api-client');
 
 describe('VendorService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getVendors', () => {
@@ -34,7 +34,7 @@ describe('VendorService', () => {
     ];
 
     it('should successfully fetch vendors list', async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue(mockVendors);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
       const result = await vendorService.getVendors();
 
@@ -44,7 +44,7 @@ describe('VendorService', () => {
     });
 
     it('should return empty array when no vendors exist', async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue([]);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       const result = await vendorService.getVendors();
 
@@ -60,7 +60,7 @@ describe('VendorService', () => {
         details: { error: 'Internal server error' },
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(vendorService.getVendors()).rejects.toEqual(mockError);
       expect(apiClient.get).toHaveBeenCalledWith('/vendors/');
@@ -73,7 +73,7 @@ describe('VendorService', () => {
         details: new Error('Network failure'),
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(vendorService.getVendors()).rejects.toEqual(mockError);
     });
@@ -85,13 +85,13 @@ describe('VendorService', () => {
         details: { error: 'Invalid or expired token' },
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(vendorService.getVendors()).rejects.toEqual(mockError);
     });
 
     it('should return vendors with correct structure', async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue(mockVendors);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
       const result = await vendorService.getVendors();
 

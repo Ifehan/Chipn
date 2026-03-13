@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import SplitMethodSelector from '../SplitMethodSelector';
 
 describe('SplitMethodSelector', () => {
-  const mockOnMethodChange = jest.fn();
+  const mockOnMethodChange = vi.fn();
 
   beforeEach(() => {
     mockOnMethodChange.mockClear();

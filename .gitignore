@@ -43,3 +43,9 @@ yarn-error.log*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Backend
+backend/.env
+backend/__pycache__
+backend/**/__pycache__
+backend/.venv

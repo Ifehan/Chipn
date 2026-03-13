@@ -47,7 +47,7 @@ describe('SettingItem Component', () => {
   describe('Interactions', () => {
     it('calls onClick handler when clicked', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<SettingItem icon={Settings} label="Settings" onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -58,7 +58,7 @@ describe('SettingItem Component', () => {
 
     it('calls onClick multiple times when clicked multiple times', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<SettingItem icon={Bell} label="Notifications" onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -80,7 +80,7 @@ describe('SettingItem Component', () => {
 
     it('is keyboard accessible with Enter key', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<SettingItem icon={Settings} label="Settings" onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -93,7 +93,7 @@ describe('SettingItem Component', () => {
 
     it('is keyboard accessible with Space key', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<SettingItem icon={Shield} label="Security" onClick={handleClick} />);
 
       const button = screen.getByRole('button');

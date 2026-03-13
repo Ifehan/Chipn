@@ -8,11 +8,11 @@ import { apiClient } from '../api-client';
 import type { LoginResponse, PasswordResetResponse } from '../types/auth.types';
 
 // Mock the api-client
-jest.mock('../api-client');
+vi.mock('../api-client');
 
 describe('AuthService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
@@ -24,7 +24,7 @@ describe('AuthService', () => {
         expires_in: 3600,
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const credentials = {
         email: 'test@example.com',
@@ -44,7 +44,7 @@ describe('AuthService', () => {
         status: 401,
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       const credentials = {
         email: 'test@example.com',
@@ -62,7 +62,7 @@ describe('AuthService', () => {
         expires_in: 3600,
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       await authService.login({ email: 'test@example.com', password: 'password123' });
 
@@ -76,7 +76,7 @@ describe('AuthService', () => {
         message: 'Password reset link has been sent to your email.',
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const data = { email: 'test@example.com' };
       const result = await authService.requestPasswordReset(data);
@@ -87,7 +87,7 @@ describe('AuthService', () => {
 
     it('should handle password reset request failure', async () => {
       const mockError = { message: 'Email not found', status: 404 };
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(
         authService.requestPasswordReset({ email: 'nonexistent@example.com' })

@@ -3,12 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { LoginForm } from '../LoginForm'
 
 describe('LoginForm', () => {
-  const mockOnSubmit = jest.fn()
-  const mockOnBack = jest.fn()
-  const mockOnForgotPassword = jest.fn()
+  const mockOnSubmit = vi.fn()
+  const mockOnBack = vi.fn()
+  const mockOnForgotPassword = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders all form elements', () => {

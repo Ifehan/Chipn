@@ -1,8 +1,8 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 // Mock the auth service
-jest.mock('../../services/auth.service');
+vi.mock('../../services/auth.service');
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -13,15 +13,18 @@ import { authService } from '../../services/auth.service';
 import type { LoginResponse } from '../../services/types/auth.types';
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('LoginPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const renderLoginPage = () => {
@@ -63,7 +66,7 @@ describe('LoginPage', () => {
       expires_in: 3600,
     };
 
-    (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
+    (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue(mockLoginResponse);
 
     renderLoginPage();
 
@@ -86,7 +89,7 @@ describe('LoginPage', () => {
   });
 
   it('displays loading state during login', async () => {
-    (authService.login as jest.Mock).mockImplementation(
+    (authService.login as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
@@ -113,7 +116,7 @@ describe('LoginPage', () => {
 
   it('displays error message on login failure', async () => {
     const errorMessage = 'Invalid credentials';
-    (authService.login as jest.Mock).mockRejectedValue({
+    (authService.login as ReturnType<typeof vi.fn>).mockRejectedValue({
       message: errorMessage,
       status: 401,
     });
@@ -136,7 +139,7 @@ describe('LoginPage', () => {
   });
 
   it('displays generic error message when error has no message', async () => {
-    (authService.login as jest.Mock).mockRejectedValue({
+    (authService.login as ReturnType<typeof vi.fn>).mockRejectedValue({
       status: 500,
     });
 
@@ -175,7 +178,7 @@ describe('LoginPage', () => {
 
   it('clears error message on new login attempt', async () => {
     const errorMessage = 'Invalid credentials';
-    (authService.login as jest.Mock)
+    (authService.login as ReturnType<typeof vi.fn>)
       .mockRejectedValueOnce({
         message: errorMessage,
         status: 401,
@@ -213,7 +216,7 @@ describe('LoginPage', () => {
   });
 
   it('disables form inputs during login', async () => {
-    (authService.login as jest.Mock).mockImplementation(
+    (authService.login as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 

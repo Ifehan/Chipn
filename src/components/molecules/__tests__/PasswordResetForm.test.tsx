@@ -3,11 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { PasswordResetForm } from '../PasswordResetForm'
 
 describe('PasswordResetForm', () => {
-  const mockOnSubmit = jest.fn()
-  const mockOnBack = jest.fn()
+  const mockOnSubmit = vi.fn()
+  const mockOnBack = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders all form elements', () => {
@@ -228,7 +228,7 @@ describe('PasswordResetForm', () => {
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
       unmount()
-      jest.clearAllMocks()
+      vi.clearAllMocks()
     }
   })
 
@@ -258,7 +258,7 @@ describe('PasswordResetForm', () => {
       })
 
       unmount()
-      jest.clearAllMocks()
+      vi.clearAllMocks()
     }
   })
 })

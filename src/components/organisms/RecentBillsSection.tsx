@@ -1,8 +1,9 @@
-'use client'
-
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function RecentBillsSection() {
+  const navigate = useNavigate()
+
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -12,7 +13,10 @@ export function RecentBillsSection() {
       <div className="card-visual p-10 text-center">
         <div className="text-7xl text-gray-300 mb-4 font-light">$</div>
         <p className="text-slate-700 font-medium mb-5 text-sm">No bills yet</p>
-        <button className="bg-emerald-600 text-white font-semibold py-2.5 px-5 rounded-lg hover:bg-emerald-700 transition-colors text-sm">
+        <button
+          onClick={() => navigate('/create-bill')}
+          className="bg-emerald-600 text-white font-semibold py-2.5 px-5 rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+        >
           Create Your First Bill
         </button>
       </div>

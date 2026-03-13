@@ -3,7 +3,7 @@ import { render, screen } from '@/test-utils';
 import { SupportSection } from '../SupportSection';
 
 // Mock the child components
-jest.mock('../../molecules/SectionCard', () => ({
+vi.mock('../../molecules/SectionCard', () => ({
   SectionCard: ({ title, icon, children }: any) => (
     <div data-testid="section-card">
       <h2>{title}</h2>
@@ -12,7 +12,7 @@ jest.mock('../../molecules/SectionCard', () => ({
   ),
 }));
 
-jest.mock('../../atoms/SettingItem', () => ({
+vi.mock('../../atoms/SettingItem', () => ({
   SettingItem: ({ icon, label }: any) => (
     <div data-testid="setting-item">
       <span>{label}</span>

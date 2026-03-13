@@ -96,7 +96,7 @@ describe('Input Component', () => {
 
     it('calls onChange handler', async () => {
       const user = userEvent.setup();
-      const handleChange = jest.fn();
+      const handleChange = vi.fn();
       render(<Input placeholder="Enter text" onChange={handleChange} />);
 
       const input = screen.getByPlaceholderText(/enter text/i);
@@ -107,7 +107,7 @@ describe('Input Component', () => {
 
     it('calls onFocus handler', async () => {
       const user = userEvent.setup();
-      const handleFocus = jest.fn();
+      const handleFocus = vi.fn();
       render(<Input placeholder="Enter text" onFocus={handleFocus} />);
 
       const input = screen.getByPlaceholderText(/enter text/i);
@@ -118,7 +118,7 @@ describe('Input Component', () => {
 
     it('calls onBlur handler', async () => {
       const user = userEvent.setup();
-      const handleBlur = jest.fn();
+      const handleBlur = vi.fn();
       render(<Input placeholder="Enter text" onBlur={handleBlur} />);
 
       const input = screen.getByPlaceholderText(/enter text/i);

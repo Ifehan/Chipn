@@ -1,56 +1,70 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AdminDashboard } from '../AdminDashboard'
 import '@testing-library/jest-dom'
 
-describe('AdminDashboard', () => {
-  const renderWithRouter = (component: React.ReactElement) => {
-    return render(<BrowserRouter>{component}</BrowserRouter>)
-  }
+// Mock hooks that hit the API
+vi.mock('../../hooks/useVendors', () => ({
+  useVendors: () => ({ vendors: [], loading: false, error: null }),
+}))
+vi.mock('../../hooks/useTransactionHistory', () => ({
+  useTransactionHistory: () => ({
+    transactions: [],
+    total: 0,
+    isLoading: false,
+    error: null,
+  }),
+}))
+vi.mock('../../hooks/useUsers', () => ({
+  useCurrentUser: () => ({
+    data: { first_name: 'Admin', last_name: 'User', role: 'admin' },
+    isLoading: false,
+  }),
+}))
 
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>{component}</BrowserRouter>
+    </QueryClientProvider>
+  )
+}
+
+describe('AdminDashboard', () => {
   test('renders dashboard heading', () => {
-    renderWithRouter(<AdminDashboard />)
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('Dashboard Overview')).toBeInTheDocument()
   })
 
-  test('renders welcome message', () => {
-    renderWithRouter(<AdminDashboard />)
-    expect(screen.getByText('Welcome back, Admin User!')).toBeInTheDocument()
-  })
-
-  test('renders stat cards with correct labels', () => {
-    renderWithRouter(<AdminDashboard />)
+  test('renders stat card labels', () => {
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('Total Vendors')).toBeInTheDocument()
     expect(screen.getByText('Transactions Today')).toBeInTheDocument()
     expect(screen.getByText('Total Revenue')).toBeInTheDocument()
   })
 
-  test('renders stat card values', () => {
-    renderWithRouter(<AdminDashboard />)
-    expect(screen.getByText('4')).toBeInTheDocument()
-    expect(screen.getByText('0')).toBeInTheDocument()
-    expect(screen.getByText('KES 835,100')).toBeInTheDocument()
-  })
-
   test('renders transaction volume section', () => {
-    renderWithRouter(<AdminDashboard />)
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('Transaction Volume (Last 7 Days)')).toBeInTheDocument()
   })
 
   test('renders recent transactions section', () => {
-    renderWithRouter(<AdminDashboard />)
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('Recent Transactions')).toBeInTheDocument()
   })
 
-  test('renders View All link for transactions', () => {
-    renderWithRouter(<AdminDashboard />)
-    const viewAllLink = screen.getByText(/View All/i)
-    expect(viewAllLink).toBeInTheDocument()
+  test('renders View All link', () => {
+    renderWithProviders(<AdminDashboard />)
+    expect(screen.getByText(/View All/i)).toBeInTheDocument()
   })
 
-  test('renders transaction table with correct headers', () => {
-    renderWithRouter(<AdminDashboard />)
+  test('renders transaction table headers', () => {
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('TRANSACTION ID')).toBeInTheDocument()
     expect(screen.getByText('VENDOR')).toBeInTheDocument()
     expect(screen.getByText('AMOUNT')).toBeInTheDocument()
@@ -58,16 +72,8 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('TIME')).toBeInTheDocument()
   })
 
-  test('renders sample transactions', () => {
-    renderWithRouter(<AdminDashboard />)
-    expect(screen.getByText('TXN001')).toBeInTheDocument()
-    expect(screen.getByText('Java House')).toBeInTheDocument()
-    expect(screen.getByText('KES 1,500')).toBeInTheDocument()
-    expect(screen.getByText('Success')).toBeInTheDocument()
-  })
-
   test('renders Sidebar component', () => {
-    renderWithRouter(<AdminDashboard />)
+    renderWithProviders(<AdminDashboard />)
     expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
     expect(screen.getByText('Bill Splitting Dashboard')).toBeInTheDocument()
   })

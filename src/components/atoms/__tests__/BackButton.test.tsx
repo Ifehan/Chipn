@@ -41,7 +41,7 @@ describe('BackButton Component', () => {
   describe('Interactions', () => {
     it('calls onClick handler when clicked', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<BackButton onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -52,7 +52,7 @@ describe('BackButton Component', () => {
 
     it('calls onClick multiple times when clicked multiple times', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<BackButton onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -65,7 +65,7 @@ describe('BackButton Component', () => {
 
     it('is keyboard accessible', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<BackButton onClick={handleClick} />);
 
       const button = screen.getByRole('button');
@@ -78,7 +78,7 @@ describe('BackButton Component', () => {
 
     it('triggers onClick on Space key press', async () => {
       const user = userEvent.setup();
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<BackButton onClick={handleClick} />);
 
       const button = screen.getByRole('button');

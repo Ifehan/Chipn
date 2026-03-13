@@ -1,5 +1,5 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -8,17 +8,17 @@ import { ProtectedRoute } from '../ProtectedRoute';
 import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
 
-jest.mock('../../services/auth.service', () => ({
+vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: jest.fn(),
-    getAccessToken: jest.fn(),
-    logout: jest.fn(),
+    hasToken: vi.fn(),
+    getAccessToken: vi.fn(),
+    logout: vi.fn(),
   },
 }));
 
-jest.mock('../../services/users.service', () => ({
+vi.mock('../../services/users.service', () => ({
   usersService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
@@ -46,15 +46,15 @@ const renderWithRouter = () =>
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authService.hasToken as jest.Mock).mockReturnValue(false);
-    (authService.getAccessToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
   });
 
   it('renders children when user is authenticated', async () => {
-    (authService.hasToken as jest.Mock).mockReturnValue(true);
-    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-    (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       first_name: 'Test',
@@ -81,9 +81,9 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects to login when token exists but user fetch fails (expired token)', async () => {
-    (authService.hasToken as jest.Mock).mockReturnValue(true);
-    (authService.getAccessToken as jest.Mock).mockReturnValue('expired-token');
-    (usersService.getCurrentUser as jest.Mock).mockRejectedValue({
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('expired-token');
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
       message: 'Unauthorized',
       status: 401,
     });

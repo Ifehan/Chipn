@@ -14,6 +14,7 @@ export interface SignupData {
   email: string
   phoneNumber: string
   idType: string
+  idNumber: string
   password: string
 }
 
@@ -24,6 +25,7 @@ export function SignupForm({ onSubmit, onBack, isLoading = false }: SignupFormPr
     email: '',
     phoneNumber: '',
     idType: 'national_id',
+    idNumber: '',
     password: ''
   })
   const [error, setError] = useState('')
@@ -35,7 +37,7 @@ export function SignupForm({ onSubmit, onBack, isLoading = false }: SignupFormPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phoneNumber || !formData.idType || !formData.password) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phoneNumber || !formData.idType || !formData.idNumber || !formData.password) {
       setError('Please fill in all fields')
       return
     }
@@ -99,6 +101,14 @@ export function SignupForm({ onSubmit, onBack, isLoading = false }: SignupFormPr
           <option value="drivers_license">Driver&apos;s License</option>
         </select>
       </div>
+      <Input
+        label="ID Number"
+        placeholder="Enter your ID number"
+        name="idNumber"
+        value={formData.idNumber}
+        onChange={handleChange}
+        icon="🪪"
+      />
       <Input
         label="Password"
         type="password"

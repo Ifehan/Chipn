@@ -25,6 +25,7 @@ export function SignupPage() {
         email: data.email,
         phone_number: data.phoneNumber,
         id_type: data.idType,
+        id_number: data.idNumber,
         password: data.password,
       })
 

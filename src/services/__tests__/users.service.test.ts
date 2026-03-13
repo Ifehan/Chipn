@@ -8,17 +8,17 @@ import { apiClient } from '../api-client';
 import type { User, CreateUserRequest, UpdateUserRequest } from '../types/user.types';
 
 // Mock the apiClient
-jest.mock('../api-client', () => ({
+vi.mock('../api-client', () => ({
   apiClient: {
-    post: jest.fn(),
-    get: jest.fn(),
-    put: jest.fn(),
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
   },
 }));
 
 describe('UsersService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockUser: User = {
@@ -52,7 +52,7 @@ describe('UsersService', () => {
         role: 'user',
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await usersService.createUser(mockRequest);
 
@@ -79,7 +79,7 @@ describe('UsersService', () => {
         status: 400,
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.createUser(mockRequest)).rejects.toEqual(mockError);
     });
@@ -99,7 +99,7 @@ describe('UsersService', () => {
         status: 400,
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.createUser(mockRequest)).rejects.toEqual(mockError);
     });
@@ -107,7 +107,7 @@ describe('UsersService', () => {
 
   describe('getCurrentUser - GET /users/me', () => {
     it('should get current authenticated user info', async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue(mockUser);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const result = await usersService.getCurrentUser();
 
@@ -124,7 +124,7 @@ describe('UsersService', () => {
         status: 401,
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.getCurrentUser()).rejects.toEqual(mockError);
     });
@@ -135,7 +135,7 @@ describe('UsersService', () => {
         status: 401,
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.getCurrentUser()).rejects.toEqual(mockError);
     });
@@ -145,7 +145,7 @@ describe('UsersService', () => {
     it('should get user by ID', async () => {
       const userId = 'user123';
 
-      (apiClient.get as jest.Mock).mockResolvedValue(mockUser);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const result = await usersService.getUserById(userId);
 
@@ -161,7 +161,7 @@ describe('UsersService', () => {
         status: 404,
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.getUserById(userId)).rejects.toEqual(mockError);
     });
@@ -173,7 +173,7 @@ describe('UsersService', () => {
         status: 400,
       };
 
-      (apiClient.get as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.getUserById(userId)).rejects.toEqual(mockError);
     });
@@ -202,7 +202,7 @@ describe('UsersService', () => {
         updated_at: '2024-01-02T00:00:00Z',
       };
 
-      (apiClient.put as jest.Mock).mockResolvedValue(updatedUser);
+      (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue(updatedUser);
 
       const result = await usersService.updateUser(userId, mockRequest);
 
@@ -228,7 +228,7 @@ describe('UsersService', () => {
         updated_at: '2024-01-02T00:00:00Z',
       };
 
-      (apiClient.put as jest.Mock).mockResolvedValue(updatedUser);
+      (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue(updatedUser);
 
       const result = await usersService.updateUser(userId, mockRequest);
 
@@ -249,7 +249,7 @@ describe('UsersService', () => {
         status: 400,
       };
 
-      (apiClient.put as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.put as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.updateUser(userId, mockRequest)).rejects.toEqual(
         mockError
@@ -267,7 +267,7 @@ describe('UsersService', () => {
         status: 404,
       };
 
-      (apiClient.put as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.put as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.updateUser(userId, mockRequest)).rejects.toEqual(
         mockError
@@ -285,7 +285,7 @@ describe('UsersService', () => {
         status: 403,
       };
 
-      (apiClient.put as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.put as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(usersService.updateUser(userId, mockRequest)).rejects.toEqual(
         mockError

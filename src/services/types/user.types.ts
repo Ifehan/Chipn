@@ -33,6 +33,7 @@ export interface CreateUserRequest {
   email: string;
   phone_number: string;
   id_type: string;
+  id_number: string;
   password: string;
 }
 

@@ -1,5 +1,5 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -9,29 +9,32 @@ import HomePage from '../HomePage';
 import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
-jest.mock('../../services/auth.service', () => ({
+vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: jest.fn(),
-    getAccessToken: jest.fn(),
-    logout: jest.fn(),
+    hasToken: vi.fn(),
+    getAccessToken: vi.fn(),
+    logout: vi.fn(),
   },
 }));
 
-jest.mock('../../services/users.service', () => ({
+vi.mock('../../services/users.service', () => ({
   usersService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
 // Mock child components
-jest.mock('../../components/molecules/Header', () => ({
+vi.mock('../../components/molecules/Header', () => ({
   Header: ({ onProfileClick }: any) => (
     <div data-testid="mock-header">
       <button onClick={onProfileClick}>Profile</button>
@@ -39,7 +42,7 @@ jest.mock('../../components/molecules/Header', () => ({
   ),
 }));
 
-jest.mock('../../components/molecules/TabsContainer', () => ({
+vi.mock('../../components/molecules/TabsContainer', () => ({
   TabsContainer: ({ activeTab, onTabChange }: any) => (
     <div data-testid="mock-tabs-container">
       <button onClick={() => onTabChange('bills')}>Bills</button>
@@ -49,19 +52,19 @@ jest.mock('../../components/molecules/TabsContainer', () => ({
   ),
 }));
 
-jest.mock('../../components/molecules/StatsContainer', () => ({
+vi.mock('../../components/molecules/StatsContainer', () => ({
   StatsContainer: () => <div data-testid="mock-stats-container">Stats</div>,
 }));
 
-jest.mock('../../components/molecules/QuickActions', () => ({
+vi.mock('../../components/molecules/QuickActions', () => ({
   QuickActions: () => <div data-testid="mock-quick-actions">Quick Actions</div>,
 }));
 
-jest.mock('../../components/organisms/RecentBillsSection', () => ({
+vi.mock('../../components/organisms/RecentBillsSection', () => ({
   RecentBillsSection: () => <div data-testid="mock-recent-bills">Recent Bills</div>,
 }));
 
-jest.mock('../../components/organisms/GroupsContent', () => ({
+vi.mock('../../components/organisms/GroupsContent', () => ({
   GroupsContent: () => <div data-testid="mock-groups-content">Groups Content</div>,
 }));
 
@@ -87,11 +90,11 @@ const renderHomePage = async (waitForAuth = true) => {
 describe('HomePage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Default to authenticated state
-    (authService.hasToken as jest.Mock).mockReturnValue(true);
-    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-    (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       first_name: 'Test',

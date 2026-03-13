@@ -27,6 +27,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/password-reset" element={<PasswordResetPage />} />
+        <Route path="/password-reset/confirm" element={<PasswordResetPage />} />
         <Route
           path="/home"
           element={

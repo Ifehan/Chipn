@@ -4,7 +4,7 @@
  */
 
 // Mock fetch globally before any imports
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 // Mock environment variables
 process.env.VITE_API_BASE_URL = 'http://localhost:8000';
@@ -57,13 +57,13 @@ Object.defineProperty(window, 'sessionStorage', {
 const mockLocation = {
   href: '',
   pathname: '/',
-  assign: jest.fn((url: string) => {
+  assign: vi.fn((url: string) => {
     mockLocation.href = url;
   }),
-  replace: jest.fn((url: string) => {
+  replace: vi.fn((url: string) => {
     mockLocation.href = url;
   }),
-  reload: jest.fn(),
+  reload: vi.fn(),
   toString: () => mockLocation.href,
 };
 
@@ -196,7 +196,7 @@ describe('ApiClient', () => {
   let client: ApiClient;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
     sessionStorage.clear();
     mockLocation.pathname = '/';
@@ -207,7 +207,7 @@ describe('ApiClient', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('Constructor', () => {
@@ -225,7 +225,7 @@ describe('ApiClient', () => {
   describe('GET requests', () => {
     it('should make successful GET request', async () => {
       const mockData = { id: 1, name: 'Test' };
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -246,7 +246,7 @@ describe('ApiClient', () => {
       localStorage.setItem('authToken', 'test-token-123');
       const mockData = { id: 1, name: 'Test' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -266,7 +266,7 @@ describe('ApiClient', () => {
 
     it('should handle 404 errors', async () => {
       const errorData = { message: 'Not found' };
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => errorData,
@@ -280,7 +280,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle network errors', async () => {
-      (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
       await expect(client.get('/test-endpoint')).rejects.toEqual({
         message: 'Network error occurred',
@@ -290,7 +290,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle 204 No Content response', async () => {
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 204,
       });
@@ -301,7 +301,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle response without error message', async () => {
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 500,
         json: async () => ({}),
@@ -315,7 +315,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle malformed JSON response on error', async () => {
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => {
@@ -336,7 +336,7 @@ describe('ApiClient', () => {
       const requestData = { name: 'Test', value: 123 };
       const mockResponse = { id: 1, ...requestData };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 201,
         json: async () => mockResponse,
@@ -357,7 +357,7 @@ describe('ApiClient', () => {
     it('should make POST request without data', async () => {
       const mockResponse = { success: true };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -382,7 +382,7 @@ describe('ApiClient', () => {
         errors: { email: 'Must be a valid email' },
       };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => errorData,
@@ -399,7 +399,7 @@ describe('ApiClient', () => {
       const requestData = { name: 'Test' };
       const mockResponse = { id: 1 };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 201,
         json: async () => mockResponse,
@@ -426,7 +426,7 @@ describe('ApiClient', () => {
       const requestData = { name: 'Updated Name' };
       const mockResponse = { id: 1, ...requestData };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -447,7 +447,7 @@ describe('ApiClient', () => {
     it('should make PUT request without data', async () => {
       const mockResponse = { success: true };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -469,7 +469,7 @@ describe('ApiClient', () => {
       const requestData = { name: 'Updated' };
       const errorData = { message: 'Resource not found' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => errorData,
@@ -488,7 +488,7 @@ describe('ApiClient', () => {
       const requestData = { status: 'active' };
       const mockResponse = { id: 1, status: 'active' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -512,7 +512,7 @@ describe('ApiClient', () => {
     it('should make PATCH request without data', async () => {
       const mockResponse = { success: true };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -535,7 +535,7 @@ describe('ApiClient', () => {
     it('should make successful DELETE request', async () => {
       const mockResponse = { success: true };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -553,7 +553,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle 204 No Content on DELETE', async () => {
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 204,
       });
@@ -566,7 +566,7 @@ describe('ApiClient', () => {
     it('should handle 403 Forbidden on DELETE', async () => {
       const errorData = { message: 'Forbidden' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => errorData,
@@ -588,7 +588,7 @@ describe('ApiClient', () => {
         details: { field: 'value' },
       };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => ({ message: 'Custom error' }),
@@ -604,7 +604,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle timeout errors', async () => {
-      (fetch as jest.Mock).mockRejectedValue(new Error('Request timeout'));
+      (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Request timeout'));
 
       await expect(client.get('/timeout')).rejects.toEqual({
         message: 'Network error occurred',
@@ -614,7 +614,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle CORS errors', async () => {
-      (fetch as jest.Mock).mockRejectedValue(new Error('CORS error'));
+      (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('CORS error'));
 
       await expect(client.get('/cors')).rejects.toEqual({
         message: 'Network error occurred',
@@ -628,7 +628,7 @@ describe('ApiClient', () => {
     it('should not include Authorization header when no token', async () => {
       const mockData = { data: 'test' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -651,7 +651,7 @@ describe('ApiClient', () => {
       sessionStorage.setItem('isAuthenticated', 'true');
       const errorData = { detail: 'Could not validate credentials' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 401,
         json: async () => errorData,
@@ -675,7 +675,7 @@ describe('ApiClient', () => {
       localStorage.setItem('authToken', 'valid-token');
       const errorData = { message: 'Insufficient permissions' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => errorData,
@@ -693,7 +693,7 @@ describe('ApiClient', () => {
     it('should merge custom options with defaults', async () => {
       const mockData = { data: 'test' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -719,7 +719,7 @@ describe('ApiClient', () => {
     it('should allow overriding Content-Type header', async () => {
       const mockData = { data: 'test' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -742,7 +742,7 @@ describe('ApiClient', () => {
 
   describe('Edge cases', () => {
     it('should handle empty response body', async () => {
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => null,
@@ -756,7 +756,7 @@ describe('ApiClient', () => {
     it('should handle very large response', async () => {
       const largeData = { items: new Array(10000).fill({ id: 1, name: 'test' }) };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => largeData,
@@ -771,7 +771,7 @@ describe('ApiClient', () => {
     it('should handle special characters in endpoint', async () => {
       const mockData = { data: 'test' };
 
-      (fetch as jest.Mock).mockResolvedValue({
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,

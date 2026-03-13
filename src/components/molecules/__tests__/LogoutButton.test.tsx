@@ -14,7 +14,7 @@ describe('LogoutButton', () => {
   });
 
   it('calls onClick when clicked', () => {
-    const mockOnClick = jest.fn();
+    const mockOnClick = vi.fn();
     render(<LogoutButton onClick={mockOnClick} />);
 
     const button = screen.getByRole('button');

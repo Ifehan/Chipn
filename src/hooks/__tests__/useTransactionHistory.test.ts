@@ -1,21 +1,31 @@
+import React from 'react';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useTransactionHistory } from '../useTransactionHistory';
 import type { TransactionHistoryResponse } from '../../services/types/payment.types';
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+};
+
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 // Mock the payment service
-jest.mock('../../services/payment.service', () => ({
+vi.mock('../../services/payment.service', () => ({
   paymentService: {
-    initiateSTKPush: jest.fn(),
-    getTransactionHistory: jest.fn(),
+    initiateSTKPush: vi.fn(),
+    getTransactionHistory: vi.fn(),
   },
 }));
 
 import { paymentService } from '../../services/payment.service';
 
-const mockPaymentService = paymentService as jest.Mocked<typeof paymentService>;
+const mockPaymentService = vi.mocked(paymentService);
 
 describe('useTransactionHistory', () => {
   const mockTransactionResponse: TransactionHistoryResponse = {
@@ -68,13 +78,13 @@ describe('useTransactionHistory', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should fetch transactions successfully', async () => {
     mockPaymentService.getTransactionHistory.mockResolvedValue(mockTransactionResponse);
 
-    const { result } = renderHook(() => useTransactionHistory());
+    const { result } = renderHook(() => useTransactionHistory(), { wrapper: createWrapper() });
 
     // Wait for loading to complete
     await waitFor(() => {
@@ -106,7 +116,7 @@ describe('useTransactionHistory', () => {
       page_size: 20,
     };
 
-    const { result } = renderHook(() => useTransactionHistory(params));
+    const { result } = renderHook(() => useTransactionHistory(params), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -123,9 +133,9 @@ describe('useTransactionHistory', () => {
     mockPaymentService.getTransactionHistory.mockRejectedValue(new Error(errorMessage));
 
     // Suppress console.error for this test since we're intentionally testing error handling
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { result } = renderHook(() => useTransactionHistory());
+    const { result } = renderHook(() => useTransactionHistory(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -141,7 +151,7 @@ describe('useTransactionHistory', () => {
   it('should refetch transactions when refetch is called', async () => {
     mockPaymentService.getTransactionHistory.mockResolvedValue(mockTransactionResponse);
 
-    const { result } = renderHook(() => useTransactionHistory());
+    const { result } = renderHook(() => useTransactionHistory(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -168,7 +178,7 @@ describe('useTransactionHistory', () => {
       status_filter: 'all',
     });
 
-    const { result } = renderHook(() => useTransactionHistory());
+    const { result } = renderHook(() => useTransactionHistory(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

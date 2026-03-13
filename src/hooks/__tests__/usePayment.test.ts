@@ -3,21 +3,31 @@
  * Tests for payment-related custom hooks
  */
 
+import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSTKPush } from '../usePayment';
 import { paymentService } from '../../services';
 import type { StkPushRequest, StkPushResponse } from '../../services';
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+};
+
 // Mock the payment service
-jest.mock('../../services', () => ({
+vi.mock('../../services', () => ({
   paymentService: {
-    initiateSTKPush: jest.fn(),
+    initiateSTKPush: vi.fn(),
   },
 }));
 
 describe('useSTKPush', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockRequest: StkPushRequest = {
@@ -40,7 +50,7 @@ describe('useSTKPush', () => {
   };
 
   it('should initialize with correct default values', () => {
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
@@ -50,9 +60,9 @@ describe('useSTKPush', () => {
   });
 
   it('should successfully initiate STK Push', async () => {
-    (paymentService.initiateSTKPush as jest.Mock).mockResolvedValue(mockResponse);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     let returnedResponse: StkPushResponse | undefined;
 
@@ -71,17 +81,19 @@ describe('useSTKPush', () => {
   });
 
   it('should set loading state during API call', async () => {
-    (paymentService.initiateSTKPush as jest.Mock).mockImplementation(
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve(mockResponse), 100))
     );
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     act(() => {
       result.current.initiateSTKPush(mockRequest);
     });
 
-    expect(result.current.loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(true);
+    });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -95,9 +107,9 @@ describe('useSTKPush', () => {
       details: { error: 'Phone number format is invalid' },
     };
 
-    (paymentService.initiateSTKPush as jest.Mock).mockRejectedValue(mockError);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     await act(async () => {
       try {
@@ -116,9 +128,9 @@ describe('useSTKPush', () => {
   });
 
   it('should reset error and response states', async () => {
-    (paymentService.initiateSTKPush as jest.Mock).mockResolvedValue(mockResponse);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     // First, make a successful call
     await act(async () => {
@@ -134,14 +146,16 @@ describe('useSTKPush', () => {
       result.current.reset();
     });
 
-    expect(result.current.error).toBeNull();
-    expect(result.current.response).toBeNull();
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+      expect(result.current.response).toBeNull();
+    });
   });
 
   it('should handle multiple consecutive calls', async () => {
-    (paymentService.initiateSTKPush as jest.Mock).mockResolvedValue(mockResponse);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     // First call
     await act(async () => {
@@ -177,9 +191,9 @@ describe('useSTKPush', () => {
     };
 
     // First call fails
-    (paymentService.initiateSTKPush as jest.Mock).mockRejectedValueOnce(mockError);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockRejectedValueOnce(mockError);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     await act(async () => {
       try {
@@ -194,7 +208,7 @@ describe('useSTKPush', () => {
     });
 
     // Second call succeeds
-    (paymentService.initiateSTKPush as jest.Mock).mockResolvedValueOnce(mockResponse);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
 
     await act(async () => {
       await result.current.initiateSTKPush(mockRequest);
@@ -213,9 +227,9 @@ describe('useSTKPush', () => {
       details: new Error('Request timeout'),
     };
 
-    (paymentService.initiateSTKPush as jest.Mock).mockRejectedValue(timeoutError);
+    (paymentService.initiateSTKPush as ReturnType<typeof vi.fn>).mockRejectedValue(timeoutError);
 
-    const { result } = renderHook(() => useSTKPush());
+    const { result } = renderHook(() => useSTKPush(), { wrapper: createWrapper() });
 
     await act(async () => {
       try {

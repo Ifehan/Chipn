@@ -67,6 +67,7 @@ describe('SignupForm', () => {
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'john@example.com' } });
     fireEvent.change(screen.getByLabelText(/m-pesa phone number/i), { target: { value: '+254712345678' } });
     fireEvent.change(screen.getByLabelText(/id type/i), { target: { value: 'national_id' } });
+    fireEvent.change(screen.getByLabelText(/id number/i), { target: { value: '12345678' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: '1234567' } });
 
     const submitButton = screen.getByRole('button', { name: /create account/i });
@@ -78,7 +79,7 @@ describe('SignupForm', () => {
   });
 
   it('calls onSubmit with form data when valid', async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn();
     render(<SignupForm onSubmit={mockOnSubmit} />);
 
     fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'John' } });
@@ -86,6 +87,7 @@ describe('SignupForm', () => {
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'john@example.com' } });
     fireEvent.change(screen.getByLabelText(/m-pesa phone number/i), { target: { value: '+254712345678' } });
     fireEvent.change(screen.getByLabelText(/id type/i), { target: { value: 'passport' } });
+    fireEvent.change(screen.getByLabelText(/id number/i), { target: { value: 'A1234567' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
 
     const submitButton = screen.getByRole('button', { name: /create account/i });
@@ -98,13 +100,14 @@ describe('SignupForm', () => {
         email: 'john@example.com',
         phoneNumber: '+254712345678',
         idType: 'passport',
+        idNumber: 'A1234567',
         password: 'password123',
       });
     });
   });
 
   it('calls onBack when back button is clicked', () => {
-    const mockOnBack = jest.fn();
+    const mockOnBack = vi.fn();
     render(<SignupForm onBack={mockOnBack} />);
 
     const backButton = screen.getByRole('button', { name: /back/i });

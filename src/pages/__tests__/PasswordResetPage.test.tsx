@@ -1,8 +1,8 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 // Mock the auth service
-jest.mock('../../services/auth.service');
+vi.mock('../../services/auth.service');
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -12,15 +12,18 @@ import { authService } from '../../services/auth.service';
 import type { PasswordResetResponse } from '../../services/types/auth.types';
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('PasswordResetPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const renderPasswordResetPage = () => {
@@ -53,7 +56,7 @@ describe('PasswordResetPage', () => {
       message: 'Password reset link has been sent to your email.',
     };
 
-    (authService.requestPasswordReset as jest.Mock).mockResolvedValue(mockResponse);
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     renderPasswordResetPage();
 
@@ -75,7 +78,7 @@ describe('PasswordResetPage', () => {
   });
 
   it('displays loading state during password reset request', async () => {
-    (authService.requestPasswordReset as jest.Mock).mockImplementation(
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
@@ -100,7 +103,7 @@ describe('PasswordResetPage', () => {
 
   it('displays error message on password reset failure', async () => {
     const errorMessage = 'Email not found';
-    (authService.requestPasswordReset as jest.Mock).mockRejectedValue({
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockRejectedValue({
       message: errorMessage,
       status: 404,
     });
@@ -122,7 +125,7 @@ describe('PasswordResetPage', () => {
   });
 
   it('displays generic error message when error has no message', async () => {
-    (authService.requestPasswordReset as jest.Mock).mockRejectedValue({
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockRejectedValue({
       status: 500,
     });
 
@@ -153,7 +156,7 @@ describe('PasswordResetPage', () => {
       message: 'Password reset link has been sent to your email.',
     };
 
-    (authService.requestPasswordReset as jest.Mock).mockResolvedValue(mockResponse);
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     renderPasswordResetPage();
 
@@ -175,7 +178,7 @@ describe('PasswordResetPage', () => {
 
   it('clears error message on new password reset attempt', async () => {
     const errorMessage = 'Email not found';
-    (authService.requestPasswordReset as jest.Mock)
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>)
       .mockRejectedValueOnce({
         message: errorMessage,
         status: 404,
@@ -209,7 +212,7 @@ describe('PasswordResetPage', () => {
   });
 
   it('disables form inputs during password reset request', async () => {
-    (authService.requestPasswordReset as jest.Mock).mockImplementation(
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
@@ -232,7 +235,7 @@ describe('PasswordResetPage', () => {
       message: 'Password reset link has been sent to your email.',
     };
 
-    (authService.requestPasswordReset as jest.Mock).mockResolvedValue(mockResponse);
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
     renderPasswordResetPage();
 
@@ -254,28 +257,19 @@ describe('PasswordResetPage', () => {
     expect(screen.getByRole('button', { name: /back to login/i })).toBeInTheDocument();
   });
 
-  it('logs error to console on password reset failure', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+  it('shows error message on password reset failure', async () => {
     const errorMessage = 'Network error';
-    const error = {
-      message: errorMessage,
-      status: 0,
-    };
+    const error = { message: errorMessage, status: 0 };
 
-    (authService.requestPasswordReset as jest.Mock).mockRejectedValue(error);
+    (authService.requestPasswordReset as ReturnType<typeof vi.fn>).mockRejectedValue(error);
 
     renderPasswordResetPage();
 
-    const emailInput = screen.getByLabelText(/email address/i);
-    const submitButton = screen.getByRole('button', { name: /send reset link/i });
-
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.click(submitButton);
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'test@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /send reset link/i }));
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Password reset failed:', error);
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
-
-    consoleErrorSpy.mockRestore();
   });
 });

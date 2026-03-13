@@ -4,15 +4,18 @@ import userEvent from '@testing-library/user-event';
 import TransactionHistoryPage from '../TransactionHistoryPage';
 import type { TransactionHistoryResponse } from '../../services/types/payment.types';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
 // Mock child components
-jest.mock('../../components/atoms/BackButton', () => ({
+vi.mock('../../components/atoms/BackButton', () => ({
   BackButton: ({ onClick }: any) => (
     <button data-testid="mock-back-button" onClick={onClick}>
       Back
@@ -21,8 +24,8 @@ jest.mock('../../components/atoms/BackButton', () => ({
 }));
 
 // Mock the useTransactionHistory hook
-const mockUseTransactionHistory = jest.fn();
-jest.mock('../../hooks/useTransactionHistory', () => ({
+const mockUseTransactionHistory = vi.fn();
+vi.mock('../../hooks/useTransactionHistory', () => ({
   useTransactionHistory: () => mockUseTransactionHistory(),
 }));
 
@@ -94,7 +97,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
   });
 
@@ -191,7 +194,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: true,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -207,7 +210,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: 'Network error',
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -224,7 +227,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -245,7 +248,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -268,7 +271,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -290,7 +293,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -307,7 +310,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -326,7 +329,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -345,7 +348,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();
@@ -367,7 +370,7 @@ describe('TransactionHistoryPage', () => {
       statusFilter: 'all',
       isLoading: false,
       error: null,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     renderTransactionHistoryPage();

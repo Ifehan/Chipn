@@ -16,12 +16,12 @@ import {
 import { usersService } from '../../services'
 import type { User, CreateUserRequest, UpdateUserRequest } from '../../services'
 
-jest.mock('../../services', () => ({
+vi.mock('../../services', () => ({
   usersService: {
-    createUser: jest.fn(),
-    getCurrentUser: jest.fn(),
-    getUserById: jest.fn(),
-    updateUser: jest.fn(),
+    createUser: vi.fn(),
+    getCurrentUser: vi.fn(),
+    getUserById: vi.fn(),
+    updateUser: vi.fn(),
   },
 }))
 
@@ -37,7 +37,7 @@ function makeWrapper() {
 
 describe('useUsers Hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   const mockUser: User = {
@@ -69,7 +69,7 @@ describe('useUsers Hooks', () => {
         password: 'securePassword123',
       }
 
-      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
 
       const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
@@ -98,7 +98,7 @@ describe('useUsers Hooks', () => {
         password: 'securePassword123',
       }
 
-      ;(usersService.createUser as jest.Mock).mockImplementation(
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve(mockUser), 100))
       )
 
@@ -108,7 +108,9 @@ describe('useUsers Hooks', () => {
         result.current.createUser(mockRequest)
       })
 
-      expect(result.current.loading).toBe(true)
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true)
+      })
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false)
@@ -126,7 +128,7 @@ describe('useUsers Hooks', () => {
       }
 
       const err = new Error('API Error')
-      ;(usersService.createUser as jest.Mock).mockRejectedValue(err)
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockRejectedValue(err)
 
       const { result } = renderHook(() => useCreateUser(), { wrapper: makeWrapper() })
 
@@ -155,7 +157,7 @@ describe('useUsers Hooks', () => {
       }
 
       const err = new Error('API Error')
-      ;(usersService.createUser as jest.Mock)
+      ;(usersService.createUser as ReturnType<typeof vi.fn>)
         .mockRejectedValueOnce(err)
         .mockResolvedValueOnce(mockUser)
 
@@ -185,7 +187,7 @@ describe('useUsers Hooks', () => {
 
   describe('useCurrentUser', () => {
     it('should initialize with loading state while fetching', () => {
-      ;(usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
       const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
       // On mount it fires the query
@@ -194,7 +196,7 @@ describe('useUsers Hooks', () => {
     })
 
     it('should expose user data after successful fetch', async () => {
-      ;(usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
 
       const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
@@ -209,7 +211,7 @@ describe('useUsers Hooks', () => {
 
     it('should expose error when fetch fails', async () => {
       const err = new Error('Unauthorized')
-      ;(usersService.getCurrentUser as jest.Mock).mockRejectedValue(err)
+      ;(usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue(err)
 
       const { result } = renderHook(() => useCurrentUser(), { wrapper: makeWrapper() })
 
@@ -232,7 +234,7 @@ describe('useUsers Hooks', () => {
 
     it('should fetch and return user by ID', async () => {
       const userId = 'user123'
-      ;(usersService.getUserById as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.getUserById as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
 
       const { result } = renderHook(() => useGetUser(userId), { wrapper: makeWrapper() })
 
@@ -248,7 +250,7 @@ describe('useUsers Hooks', () => {
     it('should handle user not found errors', async () => {
       const userId = 'nonexistent'
       const err = new Error('User not found')
-      ;(usersService.getUserById as jest.Mock).mockRejectedValue(err)
+      ;(usersService.getUserById as ReturnType<typeof vi.fn>).mockRejectedValue(err)
 
       const { result } = renderHook(() => useGetUser(userId), { wrapper: makeWrapper() })
 
@@ -278,7 +280,7 @@ describe('useUsers Hooks', () => {
       }
 
       const updatedUser: User = { ...mockUser, first_name: 'Jane', last_name: 'Smith' }
-      ;(usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser)
+      ;(usersService.updateUser as ReturnType<typeof vi.fn>).mockResolvedValue(updatedUser)
 
       const { result } = renderHook(() => useUpdateUser(), { wrapper: makeWrapper() })
 
@@ -301,7 +303,7 @@ describe('useUsers Hooks', () => {
       const userId = 'user123'
       const updateRequest: UpdateUserRequest = { email: 'invalid-email' }
       const err = new Error('Invalid email format')
-      ;(usersService.updateUser as jest.Mock).mockRejectedValue(err)
+      ;(usersService.updateUser as ReturnType<typeof vi.fn>).mockRejectedValue(err)
 
       const { result } = renderHook(() => useUpdateUser(), { wrapper: makeWrapper() })
 
@@ -340,7 +342,7 @@ describe('useUsers Hooks', () => {
         password: 'securePassword123',
       }
 
-      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
 
       const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
@@ -360,7 +362,7 @@ describe('useUsers Hooks', () => {
       const userId = 'user123'
       const updateRequest: UpdateUserRequest = { first_name: 'Jane' }
       const updatedUser: User = { ...mockUser, first_name: 'Jane' }
-      ;(usersService.updateUser as jest.Mock).mockResolvedValue(updatedUser)
+      ;(usersService.updateUser as ReturnType<typeof vi.fn>).mockResolvedValue(updatedUser)
 
       const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
@@ -378,7 +380,7 @@ describe('useUsers Hooks', () => {
 
     it('should set error when createUser fails', async () => {
       const err = new Error('API Error')
-      ;(usersService.createUser as jest.Mock).mockRejectedValue(err)
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockRejectedValue(err)
 
       const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 
@@ -408,8 +410,8 @@ describe('useUsers Hooks', () => {
       const userId = 'user123'
       const updateRequest: UpdateUserRequest = { first_name: 'Jane' }
 
-      ;(usersService.createUser as jest.Mock).mockResolvedValue(mockUser)
-      ;(usersService.updateUser as jest.Mock).mockResolvedValue({ ...mockUser, first_name: 'Jane' })
+      ;(usersService.createUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
+      ;(usersService.updateUser as ReturnType<typeof vi.fn>).mockResolvedValue({ ...mockUser, first_name: 'Jane' })
 
       const { result } = renderHook(() => useUsers(), { wrapper: makeWrapper() })
 

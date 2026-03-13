@@ -1,18 +1,33 @@
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
+import { vi } from 'vitest';
 
-// Polyfill for TextEncoder/TextDecoder
+// localStorage mock for jsdom environments
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string): string | null => store[key] ?? null,
+    setItem: (key: string, value: string): void => { store[key] = String(value); },
+    removeItem: (key: string): void => { delete store[key]; },
+    clear: (): void => { store = {}; },
+    key: (index: number): string | null => Object.keys(store)[index] ?? null,
+    get length(): number { return Object.keys(store).length; },
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
+
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
-// Suppress console errors and logs during tests to keep output clean
-// These are intentional application logs that are expected during error scenario tests
 const originalError = console.error;
 const originalLog = console.log;
 
 beforeAll(() => {
-  console.error = (...args: any[]) => {
-    // Suppress application error logs (Login failed, Password reset failed, Signup failed)
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Login failed:') ||
@@ -22,8 +37,7 @@ beforeAll(() => {
       return;
     }
 
-    // Suppress jsdom navigation errors (expected in tests with window.location.assign)
-    const errorMessage = args[0]?.message || String(args[0]);
+    const errorMessage = (args[0] as Error)?.message || String(args[0]);
     if (errorMessage.includes('Not implemented: navigation')) {
       return;
     }
@@ -31,8 +45,7 @@ beforeAll(() => {
     originalError.call(console, ...args);
   };
 
-  console.log = (...args: any[]) => {
-    // Suppress application success logs (User created successfully)
+  console.log = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       args[0].includes('User created successfully:')
@@ -48,34 +61,20 @@ afterAll(() => {
   console.log = originalLog;
 });
 
-// Mock import.meta for Vite compatibility
-Object.defineProperty(global, 'import', {
-  value: {
-    meta: {
-      env: {
-        VITE_API_BASE_URL: 'http://localhost:8000',
-      },
-    },
-  },
-  writable: true,
-});
-
-// Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
-// Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
@@ -84,12 +83,11 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+} as unknown as typeof IntersectionObserver;
 
-// Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
-} as any;
+} as unknown as typeof ResizeObserver;

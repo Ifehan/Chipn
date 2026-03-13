@@ -24,7 +24,7 @@ describe('Header', () => {
   });
 
   it('calls onProfileClick when profile button is clicked', () => {
-    const mockOnProfileClick = jest.fn();
+    const mockOnProfileClick = vi.fn();
     render(<Header {...defaultProps} onProfileClick={mockOnProfileClick} />);
 
     const profileButton = screen.getByRole('button', { name: /open profile settings/i });

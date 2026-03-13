@@ -1,10 +1,19 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
+vi.mock('../../hooks/useUsers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../hooks/useUsers')>();
+  return {
+    ...actual,
+    useUpdateUser: () => ({ updateUser: vi.fn(), loading: false, error: null }),
+  };
+});
 
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider } from '../../contexts/AuthContext';
+import * as AuthContextModule from '../../contexts/AuthContext';
 import ProfileSettingsPage from '../ProfileSettingsPage';
 import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
@@ -28,19 +37,19 @@ afterAll(() => {
   console.error = originalError;
 });
 
-const mockGetCurrentUser = jest.fn();
+const mockGetCurrentUser = vi.fn();
 
-jest.mock('../../services/auth.service', () => ({
+vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: jest.fn(),
-    getAccessToken: jest.fn(),
-    logout: jest.fn(),
+    hasToken: vi.fn(),
+    getAccessToken: vi.fn(),
+    logout: vi.fn(),
   },
 }));
 
-jest.mock('../../services/users.service', () => ({
+vi.mock('../../services/users.service', () => ({
   usersService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
@@ -48,7 +57,7 @@ jest.mock('../../services/users.service', () => ({
 // So we don't need to mock useCurrentUser
 
 // Mock child components
-jest.mock('../../components/atoms/BackButton', () => ({
+vi.mock('../../components/atoms/BackButton', () => ({
   BackButton: ({ onClick }: any) => (
     <button data-testid="mock-back-button" onClick={onClick}>
       Back
@@ -56,7 +65,7 @@ jest.mock('../../components/atoms/BackButton', () => ({
   ),
 }));
 
-jest.mock('../../components/molecules/ProfileCard', () => ({
+vi.mock('../../components/molecules/ProfileCard', () => ({
   ProfileCard: ({ userName, userEmail, phoneNumber, avatar }: any) => (
     <div data-testid="mock-profile-card">
       <span>{userName}</span>
@@ -67,11 +76,11 @@ jest.mock('../../components/molecules/ProfileCard', () => ({
   ),
 }));
 
-jest.mock('../../components/organisms/AccountSettingsSection', () => ({
+vi.mock('../../components/organisms/AccountSettingsSection', () => ({
   AccountSettingsSection: () => <div data-testid="mock-account-settings">Account Settings</div>,
 }));
 
-jest.mock('../../components/organisms/PaymentSettingsSection', () => ({
+vi.mock('../../components/organisms/PaymentSettingsSection', () => ({
   PaymentSettingsSection: ({ phoneNumber }: any) => (
     <div data-testid="mock-payment-settings">
       Payment Settings - {phoneNumber}
@@ -79,11 +88,11 @@ jest.mock('../../components/organisms/PaymentSettingsSection', () => ({
   ),
 }));
 
-jest.mock('../../components/organisms/SupportSection', () => ({
+vi.mock('../../components/organisms/SupportSection', () => ({
   SupportSection: () => <div data-testid="mock-support-section">Support Section</div>,
 }));
 
-jest.mock('../../components/molecules/LogoutButton', () => ({
+vi.mock('../../components/molecules/LogoutButton', () => ({
   LogoutButton: ({ onClick }: any) => (
     <button data-testid="mock-logout-button" onClick={onClick}>
       Logout
@@ -102,25 +111,30 @@ const mockUserData = {
 };
 
 const renderProfileSettingsPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
-    <BrowserRouter>
-      <AuthProvider>
-        <ProfileSettingsPage />
-      </AuthProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <ProfileSettingsPage />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
 describe('ProfileSettingsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock auth service
-    (authService.hasToken as jest.Mock).mockReturnValue(true);
-    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
 
     // Mock users service for AuthProvider
-    (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUserData);
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUserData);
 
     // Mock getCurrentUser for the page's useEffect
     mockGetCurrentUser.mockResolvedValue(mockUserData);
@@ -237,11 +251,11 @@ describe('ProfileSettingsPage', () => {
   });
 
   it('calls logout from AuthContext when logout button is clicked', async () => {
-    const mockLogout = jest.fn();
+    const mockLogout = vi.fn();
     const user = userEvent.setup();
 
     // Mock AuthContext with custom logout function
-    jest.spyOn(require('../../contexts/AuthContext'), 'useAuth').mockReturnValue({
+    vi.spyOn(AuthContextModule, 'useAuth').mockReturnValue({
       user: {
         id: 'user123',
         first_name: 'John',
@@ -284,15 +298,15 @@ describe('ProfileSettingsPage', () => {
 
   it('shows loading state while fetching user data', () => {
     // Mock AuthContext to return loading state
-    const mockUseAuth = jest.spyOn(require('../../contexts/AuthContext'), 'useAuth');
+    const mockUseAuth = vi.spyOn(AuthContextModule, 'useAuth');
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
       error: null,
       isAuthenticated: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      refreshUser: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshUser: vi.fn(),
     });
 
     renderProfileSettingsPage();

@@ -1,7 +1,3 @@
-/**
- * Mock API Client for Jest tests
- */
-
 export interface ApiError {
   message: string;
   status: number;
@@ -9,12 +5,11 @@ export interface ApiError {
 }
 
 export class ApiClient {
-  get = jest.fn();
-  post = jest.fn();
-  put = jest.fn();
-  patch = jest.fn();
-  delete = jest.fn();
+  get = vi.fn();
+  post = vi.fn();
+  put = vi.fn();
+  patch = vi.fn();
+  delete = vi.fn();
 }
 
-// Export singleton instance
 export const apiClient = new ApiClient();

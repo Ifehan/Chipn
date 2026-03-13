@@ -1,5 +1,5 @@
 // Mock the api-client to avoid import.meta issues
-jest.mock('../../services/api-client');
+vi.mock('../../services/api-client');
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -9,9 +9,9 @@ import CreateNewBillPage from '../CreateNewBillPage';
 import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
 
-const mockNavigate = jest.fn();
-const mockInitiateSTKPush = jest.fn();
-const mockGetCurrentUser = jest.fn();
+const mockNavigate = vi.fn();
+const mockInitiateSTKPush = vi.fn();
+const mockGetCurrentUser = vi.fn();
 
 const mockVendors = [
   {
@@ -30,27 +30,30 @@ const mockVendors = [
   },
 ];
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
-jest.mock('../../services/auth.service', () => ({
+vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: jest.fn(),
-    getAccessToken: jest.fn(),
-    logout: jest.fn(),
+    hasToken: vi.fn(),
+    getAccessToken: vi.fn(),
+    logout: vi.fn(),
   },
 }));
 
-jest.mock('../../services/users.service', () => ({
+vi.mock('../../services/users.service', () => ({
   usersService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
 // Mock payment hook
-jest.mock('../../hooks/usePayment', () => ({
+vi.mock('../../hooks/usePayment', () => ({
   useSTKPush: () => ({
     initiateSTKPush: mockInitiateSTKPush,
     loading: false,
@@ -59,12 +62,12 @@ jest.mock('../../hooks/usePayment', () => ({
 }));
 
 // Mock vendors hook
-jest.mock('../../hooks/useVendors', () => ({
+vi.mock('../../hooks/useVendors', () => ({
   useVendors: () => ({
     vendors: mockVendors,
     loading: false,
     error: null,
-    refetch: jest.fn(),
+    refetch: vi.fn(),
   }),
 }));
 
@@ -72,7 +75,7 @@ jest.mock('../../hooks/useVendors', () => ({
 // So we don't need to mock useCurrentUser
 
 // Mock child components
-jest.mock('../../components/molecules/SplitMethodSelector', () => ({
+vi.mock('../../components/molecules/SplitMethodSelector', () => ({
   SplitMethodSelector: ({ selectedMethod, onMethodChange }: any) => (
     <div data-testid="mock-split-method-selector">
       <button onClick={() => onMethodChange('equal')}>Equal</button>
@@ -104,14 +107,14 @@ describe('CreateNewBillPage', () => {
     mockNavigate.mockClear();
     mockInitiateSTKPush.mockClear();
     mockGetCurrentUser.mockClear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock auth service
-    (authService.hasToken as jest.Mock).mockReturnValue(true);
-    (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
+    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
 
     // Mock users service for AuthProvider
-    (usersService.getCurrentUser as jest.Mock).mockResolvedValue({
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-123',
       first_name: 'John',
       last_name: 'Doe',
@@ -504,7 +507,7 @@ describe('CreateNewBillPage', () => {
       mockInitiateSTKPush.mockRejectedValue(mockError);
 
       // Suppress console.error for this test since we're testing error handling
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const user = userEvent.setup();
       await renderCreateNewBillPage();
@@ -607,7 +610,7 @@ describe('CreateNewBillPage', () => {
   describe('Error Handling', () => {
     it('renders page even if user data is not immediately available', async () => {
       // Temporarily set user to null in AuthContext
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(null);
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       render(
         <BrowserRouter>

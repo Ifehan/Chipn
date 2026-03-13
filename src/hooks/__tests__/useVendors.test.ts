@@ -3,21 +3,31 @@
  * Tests for vendor-related custom hooks
  */
 
+import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useVendors } from '../useVendors';
 import { vendorService } from '../../services';
 import type { Vendor } from '../../services';
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+};
+
 // Mock the vendor service
-jest.mock('../../services', () => ({
+vi.mock('../../services', () => ({
   vendorService: {
-    getVendors: jest.fn(),
+    getVendors: vi.fn(),
   },
 }));
 
 describe('useVendors', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockVendors: Vendor[] = [
@@ -38,9 +48,9 @@ describe('useVendors', () => {
   ];
 
   it('should initialize with correct default values', async () => {
-    (vendorService.getVendors as jest.Mock).mockResolvedValue(mockVendors);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     expect(result.current.vendors).toEqual([]);
     expect(result.current.loading).toBe(true);
@@ -54,9 +64,9 @@ describe('useVendors', () => {
   });
 
   it('should fetch vendors on mount', async () => {
-    (vendorService.getVendors as jest.Mock).mockResolvedValue(mockVendors);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -68,11 +78,11 @@ describe('useVendors', () => {
   });
 
   it('should set loading state during API call', async () => {
-    (vendorService.getVendors as jest.Mock).mockImplementation(
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve(mockVendors), 100))
     );
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     // Check initial loading state
     expect(result.current.loading).toBe(true);
@@ -93,12 +103,12 @@ describe('useVendors', () => {
       details: { error: 'Internal server error' },
     };
 
-    (vendorService.getVendors as jest.Mock).mockRejectedValue(mockError);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -112,9 +122,9 @@ describe('useVendors', () => {
   });
 
   it('should handle empty vendors list', async () => {
-    (vendorService.getVendors as jest.Mock).mockResolvedValue([]);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -125,9 +135,9 @@ describe('useVendors', () => {
   });
 
   it('should refetch vendors when refetch is called', async () => {
-    (vendorService.getVendors as jest.Mock).mockResolvedValue(mockVendors);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -155,19 +165,19 @@ describe('useVendors', () => {
     };
 
     // Suppress console.error for this test
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
     // First call fails
-    (vendorService.getVendors as jest.Mock).mockRejectedValueOnce(mockError);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValueOnce(mockError);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.error).toEqual(mockError);
     });
 
     // Second call succeeds
-    (vendorService.getVendors as jest.Mock).mockResolvedValueOnce(mockVendors);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockVendors);
 
     await act(async () => {
       await result.current.refetch();
@@ -189,12 +199,12 @@ describe('useVendors', () => {
       details: new Error('Request timeout'),
     };
 
-    (vendorService.getVendors as jest.Mock).mockRejectedValue(timeoutError);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(timeoutError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.error).toEqual(timeoutError);
@@ -212,12 +222,12 @@ describe('useVendors', () => {
       details: { error: 'Invalid or expired token' },
     };
 
-    (vendorService.getVendors as jest.Mock).mockRejectedValue(unauthorizedError);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockRejectedValue(unauthorizedError);
 
     // Suppress console.error for this test
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.error).toEqual(unauthorizedError);
@@ -229,9 +239,9 @@ describe('useVendors', () => {
   });
 
   it('should return vendors with correct structure', async () => {
-    (vendorService.getVendors as jest.Mock).mockResolvedValue(mockVendors);
+    (vendorService.getVendors as ReturnType<typeof vi.fn>).mockResolvedValue(mockVendors);
 
-    const { result } = renderHook(() => useVendors());
+    const { result } = renderHook(() => useVendors(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

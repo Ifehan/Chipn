@@ -8,11 +8,11 @@ import { apiClient } from '../api-client';
 import type { StkPushRequest, StkPushResponse } from '../types/payment.types';
 
 // Mock the API client
-jest.mock('../api-client');
+vi.mock('../api-client');
 
 describe('PaymentService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('initiateSTKPush', () => {
@@ -36,7 +36,7 @@ describe('PaymentService', () => {
     };
 
     it('should successfully initiate STK Push', async () => {
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await paymentService.initiateSTKPush(mockRequest);
 
@@ -51,7 +51,7 @@ describe('PaymentService', () => {
         details: { error: 'Phone number format is invalid' },
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(paymentService.initiateSTKPush(mockRequest)).rejects.toEqual(
         mockError
@@ -66,7 +66,7 @@ describe('PaymentService', () => {
         details: new Error('Network failure'),
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       await expect(paymentService.initiateSTKPush(mockRequest)).rejects.toEqual(
         mockError
@@ -74,7 +74,7 @@ describe('PaymentService', () => {
     });
 
     it('should send correct payload with multiple payments', async () => {
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       await paymentService.initiateSTKPush(mockRequest);
 
@@ -99,7 +99,7 @@ describe('PaymentService', () => {
         vendor_id: 'vendor-456',
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await paymentService.initiateSTKPush(singlePaymentRequest);
 
@@ -118,7 +118,7 @@ describe('PaymentService', () => {
         vendor_id: 'vendor-789',
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       await paymentService.initiateSTKPush(requestWithEmptyDesc);
 
@@ -136,7 +136,7 @@ describe('PaymentService', () => {
         vendor_id: 'vendor-999',
       };
 
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+      (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const result = await paymentService.initiateSTKPush(largeAmountRequest);
 

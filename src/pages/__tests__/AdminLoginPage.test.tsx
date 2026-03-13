@@ -6,20 +6,23 @@ import '@testing-library/jest-dom'
 import * as AuthContext from '../../contexts/AuthContext'
 
 // Mock react-router-dom
-const mockNavigate = jest.fn()
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}))
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...(actual as any),
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('AdminLoginPage', () => {
-  const mockLogin = jest.fn()
+  const mockLogin = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.spyOn(AuthContext, 'useAuth').mockReturnValue({
+    vi.clearAllMocks()
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       login: mockLogin,
-      logout: jest.fn(),
+      logout: vi.fn(),
       user: null,
       isAuthenticated: false,
       isLoading: false,
@@ -65,35 +68,8 @@ describe('AdminLoginPage', () => {
     expect(backButton).toBeInTheDocument()
   })
 
-  test('renders demo credentials section', () => {
-    renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('Demo Credentials:')).toBeInTheDocument()
-  })
-
-  test('renders all demo credential roles', () => {
-    renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('Admin')).toBeInTheDocument()
-    expect(screen.getByText('Support Staff')).toBeInTheDocument()
-    expect(screen.getByText('Analyst')).toBeInTheDocument()
-  })
-
-  test('renders admin demo credentials', () => {
-    renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('admin@tandapay.com')).toBeInTheDocument()
-    expect(screen.getByText('admin123')).toBeInTheDocument()
-  })
-
-  test('renders support demo credentials', () => {
-    renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('support@tandapay.com')).toBeInTheDocument()
-    expect(screen.getByText('support123')).toBeInTheDocument()
-  })
-
-  test('renders analyst demo credentials', () => {
-    renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('analyst@tandapay.com')).toBeInTheDocument()
-    expect(screen.getByText('analyst123')).toBeInTheDocument()
-  })
+  // Demo credentials section was removed as a security fix (Phase 2 audit)
+  // Hardcoded credentials in UI are a security vulnerability and must not be re-added
 
   test('shows error when email is empty', async () => {
     renderWithRouter(<AdminLoginPage />)
@@ -154,7 +130,7 @@ describe('AdminLoginPage', () => {
 
   test('shows error message on login failure', async () => {
     // Suppress expected console.error for this test
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     mockLogin.mockRejectedValue({
       message: 'Invalid credentials'

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { EmptyBillsState } from '../EmptyBillsState';
 
 // Mock the Button component
-jest.mock('../../atoms/Button', () => ({
+vi.mock('../../atoms/Button', () => ({
   Button: ({ children, variant, fullWidth, className, onClick }: any) => (
     <button
       data-testid="button"
