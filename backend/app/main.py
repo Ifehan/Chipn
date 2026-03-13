@@ -73,23 +73,9 @@ app.include_router(dashboard.router)
 
 
 @app.on_event("startup")
-def seed_vendors():
-    from app.database import SessionLocal
-    from app.models.vendor import Vendor as VendorModel
-    db = SessionLocal()
-    try:
-        if db.query(VendorModel).count() == 0:
-            for name, paybill in [
-                ("Safaricom", "174379"),
-                ("Kenya Power", "888880"),
-                ("Nairobi Water", "444444"),
-                ("DSTV Kenya", "333333"),
-                ("Uber Kenya", "222222"),
-            ]:
-                db.add(VendorModel(name=name, paybill_number=paybill))
-            db.commit()
-    finally:
-        db.close()
+def seed_database():
+    from app.seed import run_all_seeds
+    run_all_seeds()
 
 
 @app.get("/health")

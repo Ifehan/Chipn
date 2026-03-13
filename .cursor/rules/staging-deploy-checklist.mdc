@@ -1,0 +1,41 @@
+---
+description: Checklist to follow when deploying to staging or setting up a new environment
+globs:
+  - backend/**
+  - .github/workflows/**
+  - railway.toml
+  - vercel.json
+alwaysApply: false
+---
+
+# Staging / New Environment Deploy Checklist
+
+When deploying the backend to a new environment (Railway, staging, production), always verify these items BEFORE telling the user the deploy is done:
+
+## Database
+
+- [ ] **Seed data exists** — The cloud database starts empty. Confirm that `backend/app/seed.py` covers all required reference data (vendors, categories, etc.). If new seed data is needed, add it to `seed.py` — it runs automatically on startup.
+- [ ] **Migrations ran** — Tables are created via `Base.metadata.create_all()` on startup. If using Alembic in the future, ensure migrations are applied.
+
+## Environment Variables
+
+- [ ] All required env vars are set on the hosting platform (not just in local `.env`)
+- [ ] `FRONTEND_URL` is set to the actual frontend URL (for CORS)
+- [ ] `DATABASE_URL` points to the cloud database (not localhost)
+- [ ] API keys (RESEND_API_KEY, MPESA_* keys) are set if those features should work
+- [ ] `ENVIRONMENT` is set to `staging` or `production` (not `development`)
+
+## End-to-End Verification
+
+After deploy, always smoke test:
+- [ ] `GET /health` returns 200
+- [ ] Sign up a test user
+- [ ] Log in and get a token
+- [ ] Hit authenticated endpoints (vendors, dashboard, user profile)
+- [ ] Verify seed data is populated (vendors list is not empty)
+
+## CI/CD Secrets
+
+If GitHub Actions deploys are configured, verify these secrets exist:
+- `RAILWAY_TOKEN`, `RAILWAY_PROJECT_ID`, `RAILWAY_SERVICE_ID`
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `STAGING_API_URL`
