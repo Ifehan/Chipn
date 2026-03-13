@@ -54,7 +54,7 @@ describe('UserManagementPage', () => {
     expect(screen.getByText('U001')).toBeInTheDocument()
     const adminUserElements = screen.getAllByText('Admin User')
     expect(adminUserElements.length).toBeGreaterThan(0)
-    const adminEmailElements = screen.getAllByText('admin@tandapay.com')
+    const adminEmailElements = screen.getAllByText('admin@chipn.com')
     expect(adminEmailElements.length).toBeGreaterThan(0)
   })
 
@@ -84,13 +84,13 @@ describe('UserManagementPage', () => {
 
   test('renders Sidebar component', () => {
     renderWithRouter(<UserManagementPage />)
-    expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
+    expect(screen.getByText('Chipn Admin')).toBeInTheDocument()
   })
 
   test('displays user emails', () => {
     renderWithRouter(<UserManagementPage />)
     expect(screen.getByText('john.doe@example.com')).toBeInTheDocument()
     expect(screen.getByText('jane.smith@example.com')).toBeInTheDocument()
-    expect(screen.getByText('support@tandapay.com')).toBeInTheDocument()
+    expect(screen.getByText('support@chipn.com')).toBeInTheDocument()
   })
 })

@@ -16,7 +16,7 @@ export class WelcomePage extends BasePage {
     super(page);
 
     // Initialize locators based on actual WelcomePage component
-    this.heading = page.getByRole('heading', { name: /tandapay/i });
+    this.heading = page.getByRole('heading', { name: /chipn/i });
     this.subtitle = page.getByText(/split bills and pay instantly via m-pesa/i);
     this.createAccountButton = page.getByRole('button', { name: /create new account/i });
     this.signInButton = page.getByRole('button', { name: /sign in to existing account/i });

@@ -74,7 +74,7 @@ describe('VendorsPage', () => {
 
   test('renders Sidebar component', () => {
     renderWithRouter(<VendorsPage />)
-    expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
+    expect(screen.getByText('Chipn Admin')).toBeInTheDocument()
   })
 
   test('displays vendor contact information', () => {

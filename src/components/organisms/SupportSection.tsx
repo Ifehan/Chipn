@@ -10,7 +10,7 @@ export function SupportSection() {
     <SectionCard title="Support & Help" icon={HelpCircle}>
       <div className="space-y-0">
         <SettingItem icon={HelpCircle} label="Help Center" onClick={() => comingSoon('Help Center')} />
-        <SettingItem icon={Phone} label="Contact Support" onClick={() => window.location.href = 'mailto:support@tandapay.com'} />
+        <SettingItem icon={Phone} label="Contact Support" onClick={() => window.location.href = 'mailto:support@chipn.com'} />
         <SettingItem icon={Info} label="Terms & Conditions" onClick={() => comingSoon('Terms & Conditions')} />
       </div>
     </SectionCard>

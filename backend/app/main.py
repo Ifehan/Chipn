@@ -10,8 +10,8 @@ from app.routers import auth, mpesa, users, vendors
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="TandaPay API",
-    description="Backend API for TandaPay — M-Pesa bill splitting platform",
+    title="Chipn API",
+    description="Backend API for Chipn — M-Pesa bill splitting platform",
     version="1.0.0",
 )
 

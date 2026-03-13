@@ -7,12 +7,12 @@ export function WelcomePage() {
 
   return (
     <AuthCard
-      title="TandaPay"
+      title="Chipn"
       subtitle="Split bills and pay instantly via M-PESA"
     >
       <div className="space-y-4">
         <p className="text-center text-gray-600 text-sm">
-          Welcome to TandaPay! Split bills and get paid instantly via M-PESA.
+          Welcome to Chipn! Split bills and get paid instantly via M-PESA.
         </p>
         <Button
           variant="primary"

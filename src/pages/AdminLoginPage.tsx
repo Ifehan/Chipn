@@ -42,7 +42,7 @@ export function AdminLoginPage() {
             <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mb-4">
               <Lock size={32} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">TandaPay Admin</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Chipn Admin</h1>
             <p className="text-slate-600 text-center mt-2">Sign in to access the dashboard</p>
           </div>
 
@@ -129,9 +129,9 @@ export function AdminLoginPage() {
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Demo Credentials:</p>
             <div className="space-y-2">
               {[
-                { role: 'Admin', email: 'admin@tandapay.com', password: 'admin123' },
-                { role: 'Support Staff', email: 'support@tandapay.com', password: 'support123' },
-                { role: 'Analyst', email: 'analyst@tandapay.com', password: 'analyst123' },
+                { role: 'Admin', email: 'admin@chipn.com', password: 'admin123' },
+                { role: 'Support Staff', email: 'support@chipn.com', password: 'support123' },
+                { role: 'Analyst', email: 'analyst@chipn.com', password: 'analyst123' },
               ].map(({ role, email, password }) => (
                 <div key={role} className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
                   <p className="font-semibold text-slate-700">{role}</p>

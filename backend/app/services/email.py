@@ -11,7 +11,7 @@ def send_password_reset_email(to_email: str, reset_url: str) -> bool:
 
     html = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #059669;">TandaPay Password Reset</h2>
+      <h2 style="color: #059669;">Chipn Password Reset</h2>
       <p>You requested a password reset. Click the button below to set a new password.</p>
       <p>This link expires in <strong>1 hour</strong>.</p>
       <a href="{reset_url}"
@@ -23,7 +23,7 @@ def send_password_reset_email(to_email: str, reset_url: str) -> bool:
         If you didn't request this, you can safely ignore this email.
       </p>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-      <p style="color:#6b7280;font-size:12px;">TandaPay — Secure bill splitting powered by M-PESA</p>
+      <p style="color:#6b7280;font-size:12px;">Chipn — Secure bill splitting powered by M-PESA</p>
     </div>
     """
 
@@ -31,7 +31,7 @@ def send_password_reset_email(to_email: str, reset_url: str) -> bool:
         resend.Emails.send({
             "from": settings.EMAIL_FROM,
             "to": [to_email],
-            "subject": "Reset your TandaPay password",
+            "subject": "Reset your Chipn password",
             "html": html,
         })
         return True

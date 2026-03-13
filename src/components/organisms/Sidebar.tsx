@@ -8,7 +8,7 @@ export function Sidebar() {
     <aside className="w-64 bg-white border-r border-slate-100 min-h-screen p-6 flex flex-col justify-between">
       <div>
         <div className="mb-8">
-          <div className="text-2xl font-bold text-slate-900">TandaPay Admin</div>
+          <div className="text-2xl font-bold text-slate-900">Chipn Admin</div>
           <div className="text-xs text-slate-400">Bill Splitting Dashboard</div>
         </div>
 
@@ -25,7 +25,7 @@ export function Sidebar() {
           <Avatar initials="AU" size="sm" />
           <div className="ml-3">
             <div className="text-sm font-medium">Admin User</div>
-            <div className="text-xs text-slate-500">admin@tandapay.com</div>
+            <div className="text-xs text-slate-500">admin@chipn.com</div>
           </div>
         </div>
         <div className="mt-4">

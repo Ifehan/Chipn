@@ -52,7 +52,7 @@ describe('WelcomePage', () => {
 
   it('displays the app name', () => {
     renderWelcomePage();
-    expect(screen.getByText('TandaPay')).toBeInTheDocument();
+    expect(screen.getByText('Chipn')).toBeInTheDocument();
   });
 
   it('displays the app subtitle', () => {
@@ -63,7 +63,7 @@ describe('WelcomePage', () => {
   it('displays welcome message', () => {
     renderWelcomePage();
     expect(
-      screen.getByText(/Welcome to TandaPay! Split bills and get paid instantly via M-PESA./i)
+      screen.getByText(/Welcome to Chipn! Split bills and get paid instantly via M-PESA./i)
     ).toBeInTheDocument();
   });
 
@@ -114,14 +114,14 @@ describe('WelcomePage', () => {
   it('renders AuthCard with correct props', () => {
     renderWelcomePage();
 
-    expect(screen.getByText('TandaPay')).toBeInTheDocument();
+    expect(screen.getByText('Chipn')).toBeInTheDocument();
     expect(screen.getByText('Split bills and pay instantly via M-PESA')).toBeInTheDocument();
   });
 
   it('displays content in correct order', () => {
     renderWelcomePage();
 
-    const welcomeText = screen.getByText(/Welcome to TandaPay/i);
+    const welcomeText = screen.getByText(/Welcome to Chipn/i);
     const createButton = screen.getByText('Create New Account');
     const signInButton = screen.getByText('Sign In to Existing Account');
 

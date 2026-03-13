@@ -15,7 +15,7 @@ This project uses **Playwright** for End-to-End (E2E) testing to validate comple
 ## Project Structure
 
 ```
-tunga-pay/
+chipn/
 ├── e2e/                           # E2E tests directory
 │   ├── pages/                     # Page Object Models
 │   │   ├── BasePage.ts           # Base page with common methods

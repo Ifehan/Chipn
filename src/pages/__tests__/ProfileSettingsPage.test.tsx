@@ -234,7 +234,7 @@ describe('ProfileSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('TandaPay')).toBeInTheDocument();
+      expect(screen.getByText('Chipn')).toBeInTheDocument();
       expect(screen.getByText('Version 1.0.0 MVP')).toBeInTheDocument();
       expect(screen.getByText('Secure bill splitting powered by M-PESA')).toBeInTheDocument();
     });

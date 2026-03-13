@@ -79,7 +79,7 @@ test.describe('Admin Navigation E2E Tests', () => {
     await page.waitForURL('**/admin/vendors')
 
     // Sidebar should still be visible
-    await expect(page.locator('text=TandaPay Admin')).toBeVisible()
+    await expect(page.locator('text=Chipn Admin')).toBeVisible()
     await expect(page.locator('text=Bill Splitting Dashboard')).toBeVisible()
 
     // All navigation items should be visible

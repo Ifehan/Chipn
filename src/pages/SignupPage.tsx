@@ -46,7 +46,7 @@ export function SignupPage() {
 
   return (
     <AuthCard
-      title="TandaPay"
+      title="Chipn"
       subtitle="Split bills and pay instantly via M-PESA"
     >
       {apiError && (

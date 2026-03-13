@@ -4,19 +4,19 @@ services:
   # PostgreSQL database
   db:
     image: postgres:16-alpine
-    container_name: tunga-db
+    container_name: chipn-db
     environment:
-      POSTGRES_USER: tunga
-      POSTGRES_PASSWORD: tunga_password
-      POSTGRES_DB: tunga_db
+      POSTGRES_USER: chipn
+      POSTGRES_PASSWORD: chipn_password
+      POSTGRES_DB: chipn_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - tunga-pay-network
+      - chipn-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tunga -d tunga_db"]
+      test: ["CMD-SHELL", "pg_isready -U chipn -d chipn_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,26 +26,26 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: tunga-backend
+    container_name: chipn-backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://tunga:tunga_password@db:5432/tunga_db
+      - DATABASE_URL=postgresql://chipn:chipn_password@db:5432/chipn_db
     env_file:
       - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - tunga-pay-network
+      - chipn-network
     restart: unless-stopped
 
   # Development service
-  tunga-pay-dev:
+  chipn-dev:
     build:
       context: .
       dockerfile: docker/dev/Dockerfile
-    container_name: tunga-pay-dev
+    container_name: chipn-dev
     ports:
       - "5173:5173"
     volumes:
@@ -54,23 +54,23 @@ services:
     environment:
       - NODE_ENV=development
     networks:
-      - tunga-pay-network
+      - chipn-network
     restart: unless-stopped
     stdin_open: true
     tty: true
 
   # Production service
-  tunga-pay-prod:
+  chipn-prod:
     build:
       context: .
       dockerfile: docker/prod/Dockerfile
-    container_name: tunga-pay-prod
+    container_name: chipn-prod
     ports:
       - "80:80"
     environment:
       - NODE_ENV=production
     networks:
-      - tunga-pay-network
+      - chipn-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -80,7 +80,7 @@ services:
       start_period: 5s
 
 networks:
-  tunga-pay-network:
+  chipn-network:
     driver: bridge
 
 volumes:

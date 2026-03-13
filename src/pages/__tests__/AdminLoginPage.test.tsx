@@ -36,7 +36,7 @@ describe('AdminLoginPage', () => {
 
   test('renders admin login heading', () => {
     renderWithRouter(<AdminLoginPage />)
-    expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
+    expect(screen.getByText('Chipn Admin')).toBeInTheDocument()
   })
 
   test('renders login subtitle', () => {
@@ -84,7 +84,7 @@ describe('AdminLoginPage', () => {
   test('shows error when password is empty', async () => {
     renderWithRouter(<AdminLoginPage />)
     const emailInput = screen.getByPlaceholderText('you@example.com')
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
 
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
     fireEvent.click(signInButton)
@@ -102,12 +102,12 @@ describe('AdminLoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('••••••••')
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
 
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
     fireEvent.click(signInButton)
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('admin@tandapay.com', 'admin123')
+      expect(mockLogin).toHaveBeenCalledWith('admin@chipn.com', 'admin123')
     })
   })
 
@@ -119,7 +119,7 @@ describe('AdminLoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('••••••••')
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
 
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
     fireEvent.click(signInButton)
 
@@ -141,7 +141,7 @@ describe('AdminLoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('••••••••')
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
 
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
     fireEvent.change(passwordInput, { target: { value: 'wrong' } })
     fireEvent.click(signInButton)
 
@@ -168,7 +168,7 @@ describe('AdminLoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('••••••••')
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
 
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
     fireEvent.click(signInButton)
 
@@ -185,7 +185,7 @@ describe('AdminLoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('••••••••')
     const signInButton = screen.getByRole('button', { name: /Sign In/i })
 
-    fireEvent.change(emailInput, { target: { value: 'admin@tandapay.com' } })
+    fireEvent.change(emailInput, { target: { value: 'admin@chipn.com' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
     fireEvent.click(signInButton)
 
@@ -197,7 +197,7 @@ describe('AdminLoginPage', () => {
   test('lock icon is visible in header', () => {
     renderWithRouter(<AdminLoginPage />)
     // Check for lock icon container (SVG or similar)
-    const header = screen.getByText('TandaPay Admin').closest('div')
+    const header = screen.getByText('Chipn Admin').closest('div')
     expect(header?.parentElement).toBeInTheDocument()
   })
 

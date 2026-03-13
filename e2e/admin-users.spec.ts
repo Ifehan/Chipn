@@ -52,10 +52,10 @@ test.describe('Admin User Management Page E2E Tests', () => {
 
   test('should display user emails', async ({ page }) => {
     // Check for emails - use more specific selectors to avoid strict mode violations
-    await expect(page.locator('td:has-text("admin@tandapay.com")')).toBeVisible()
+    await expect(page.locator('td:has-text("admin@chipn.com")')).toBeVisible()
     await expect(page.locator('td:has-text("john.doe@example.com")')).toBeVisible()
     await expect(page.locator('td:has-text("jane.smith@example.com")')).toBeVisible()
-    await expect(page.locator('td:has-text("support@tandapay.com")')).toBeVisible()
+    await expect(page.locator('td:has-text("support@chipn.com")')).toBeVisible()
     await expect(page.locator('td:has-text("inactive@example.com")')).toBeVisible()
   })
 
@@ -102,7 +102,7 @@ test.describe('Admin User Management Page E2E Tests', () => {
 
   test('should have functioning sidebar on users page', async ({ page }) => {
     // Sidebar should be visible
-    await expect(page.locator('text=TandaPay Admin')).toBeVisible()
+    await expect(page.locator('text=Chipn Admin')).toBeVisible()
 
     // All navigation links should be visible
     await expect(page.locator('a:has-text("Dashboard")')).toBeVisible()

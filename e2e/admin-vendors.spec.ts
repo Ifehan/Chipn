@@ -87,7 +87,7 @@ test.describe('Admin Vendors Page E2E Tests', () => {
 
   test('should have functioning sidebar on vendors page', async ({ page }) => {
     // Sidebar should be visible
-    await expect(page.locator('text=TandaPay Admin')).toBeVisible()
+    await expect(page.locator('text=Chipn Admin')).toBeVisible()
 
     // All navigation links should be visible
     await expect(page.locator('a:has-text("Dashboard")')).toBeVisible()

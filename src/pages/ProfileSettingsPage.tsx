@@ -126,7 +126,7 @@ export function ProfileSettingsPage() {
             <PaymentSettingsSection phoneNumber={userData.phoneNumber} />
             <SupportSection />
             <div className="card-visual mb-4 p-4 text-center">
-              <p className="font-semibold text-slate-900 text-sm">TandaPay</p>
+              <p className="font-semibold text-slate-900 text-sm">Chipn</p>
               <p className="text-xs text-slate-500 mt-1">Version 1.0.0 MVP</p>
               <p className="text-xs text-slate-500 mt-0.5">Secure bill splitting powered by M-PESA</p>
             </div>

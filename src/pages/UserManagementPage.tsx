@@ -18,7 +18,7 @@ export function UserManagementPage() {
     {
       id: 'U001',
       name: 'Admin User',
-      email: 'admin@tandapay.com',
+      email: 'admin@chipn.com',
       role: 'Admin',
       status: 'Active',
       joinDate: '2024-01-01',
@@ -45,7 +45,7 @@ export function UserManagementPage() {
     {
       id: 'U004',
       name: 'Support Staff',
-      email: 'support@tandapay.com',
+      email: 'support@chipn.com',
       role: 'Support',
       status: 'Active',
       joinDate: '2024-02-10',

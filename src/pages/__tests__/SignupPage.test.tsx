@@ -86,7 +86,7 @@ describe('SignupPage', () => {
 
   it('renders AuthCard with correct title and subtitle', () => {
     renderSignupPage();
-    expect(screen.getByText('TandaPay')).toBeInTheDocument();
+    expect(screen.getByText('Chipn')).toBeInTheDocument();
     expect(screen.getByText('Split bills and pay instantly via M-PESA')).toBeInTheDocument();
   });
 

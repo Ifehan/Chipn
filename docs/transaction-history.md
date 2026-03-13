@@ -402,7 +402,7 @@ Potential improvements for the transaction history feature:
 
 - [Services Layer Documentation](../src/services/README.md)
 - [Unit Testing Guide](unit-testing.md)
-- [API Documentation](https://api.tungapay.com/docs)
+- [API Documentation](https://api.chipn.com/docs)
 
 ---
 

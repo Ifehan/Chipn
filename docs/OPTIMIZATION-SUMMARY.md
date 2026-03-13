@@ -1,7 +1,7 @@
 # Performance Optimization Summary
 
 ## Overview
-This document summarizes the three major performance optimizations implemented in the TungaPay frontend application.
+This document summarizes the three major performance optimizations implemented in the Chipn frontend application.
 
 ---
 

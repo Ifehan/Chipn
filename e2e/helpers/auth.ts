@@ -93,13 +93,13 @@ async function setupAuthMocks(page: Page, email: string) {
  */
 export async function loginAsAdmin(page: Page) {
   // Setup API mocks before navigating
-  await setupAuthMocks(page, 'admin@tandapay.com')
+  await setupAuthMocks(page, 'admin@chipn.com')
   
   await page.goto('/admin/login')
   await page.waitForLoadState('networkidle')
   
   // Fill in admin credentials
-  await page.fill('input[type="email"]', 'admin@tandapay.com')
+  await page.fill('input[type="email"]', 'admin@chipn.com')
   await page.fill('input[type="password"]', 'admin123')
   
   // Submit the form
@@ -114,12 +114,12 @@ export async function loginAsAdmin(page: Page) {
  * Login as support staff for e2e tests
  */
 export async function loginAsSupport(page: Page) {
-  await setupAuthMocks(page, 'support@tandapay.com')
+  await setupAuthMocks(page, 'support@chipn.com')
   
   await page.goto('/admin/login')
   await page.waitForLoadState('networkidle')
   
-  await page.fill('input[type="email"]', 'support@tandapay.com')
+  await page.fill('input[type="email"]', 'support@chipn.com')
   await page.fill('input[type="password"]', 'support123')
   
   await page.click('button:has-text("Sign In")')
@@ -131,12 +131,12 @@ export async function loginAsSupport(page: Page) {
  * Login as analyst for e2e tests
  */
 export async function loginAsAnalyst(page: Page) {
-  await setupAuthMocks(page, 'analyst@tandapay.com')
+  await setupAuthMocks(page, 'analyst@chipn.com')
   
   await page.goto('/admin/login')
   await page.waitForLoadState('networkidle')
   
-  await page.fill('input[type="email"]', 'analyst@tandapay.com')
+  await page.fill('input[type="email"]', 'analyst@chipn.com')
   await page.fill('input[type="password"]', 'analyst123')
   
   await page.click('button:has-text("Sign In")')

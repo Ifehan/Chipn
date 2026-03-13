@@ -9,7 +9,7 @@ test.describe('Admin Login Page E2E Tests', () => {
   })
 
   test('should display admin login page heading', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('TandaPay Admin')
+    await expect(page.locator('h1')).toContainText('Chipn Admin')
   })
 
   test('should display login subtitle', async ({ page }) => {
@@ -56,14 +56,14 @@ test.describe('Admin Login Page E2E Tests', () => {
     // Use more specific selectors to avoid strict mode violations
     const adminRole = page.locator('p:has-text("Admin")').first()
     await expect(adminRole).toBeVisible()
-    await expect(page.locator('text=admin@tandapay.com')).toBeVisible()
+    await expect(page.locator('text=admin@chipn.com')).toBeVisible()
     await expect(page.locator('text=admin123')).toBeVisible()
   })
 
   test('should display support staff credentials', async ({ page }) => {
     const supportRole = page.locator('p:has-text("Support Staff")')
     await expect(supportRole).toBeVisible()
-    await expect(page.locator('text=support@tandapay.com')).toBeVisible()
+    await expect(page.locator('text=support@chipn.com')).toBeVisible()
     await expect(page.locator('text=support123')).toBeVisible()
   })
 
@@ -71,7 +71,7 @@ test.describe('Admin Login Page E2E Tests', () => {
     // Use the exact same approach as other tests but ensure we're selecting the right element
     const analystRole = page.locator('p:has-text("Analyst")').first()
     await expect(analystRole).toBeVisible()
-    await expect(page.locator('text=analyst@tandapay.com')).toBeVisible()
+    await expect(page.locator('text=analyst@chipn.com')).toBeVisible()
     await expect(page.locator('text=analyst123')).toBeVisible()
   })
 
@@ -96,7 +96,7 @@ test.describe('Admin Login Page E2E Tests', () => {
     const emailInput = page.locator('input[type="email"]')
     const signInButton = page.locator('button:has-text("Sign In")')
 
-    await emailInput.fill('admin@tandapay.com')
+    await emailInput.fill('admin@chipn.com')
     await signInButton.click()
 
     await expect(page.locator('text=Please fill in all fields')).toBeVisible()
@@ -104,9 +104,9 @@ test.describe('Admin Login Page E2E Tests', () => {
 
   test('should accept email input', async ({ page }) => {
     const emailInput = page.locator('input[type="email"]')
-    await emailInput.fill('admin@tandapay.com')
+    await emailInput.fill('admin@chipn.com')
 
-    await expect(emailInput).toHaveValue('admin@tandapay.com')
+    await expect(emailInput).toHaveValue('admin@chipn.com')
   })
 
   test('should accept password input', async ({ page }) => {
@@ -121,7 +121,7 @@ test.describe('Admin Login Page E2E Tests', () => {
     const passwordInput = page.locator('input[type="password"]')
     const signInButton = page.locator('button:has-text("Sign In")')
 
-    await emailInput.fill('admin@tandapay.com')
+    await emailInput.fill('admin@chipn.com')
     await passwordInput.fill('admin123')
 
     // Start the form submission and wait for the loading state to appear
@@ -146,7 +146,7 @@ test.describe('Admin Login Page E2E Tests', () => {
 
   test('should have dark lock icon in header', async ({ page }) => {
     // Look for the lock icon SVG or container
-    const header = page.locator('h1:has-text("TandaPay Admin")')
+    const header = page.locator('h1:has-text("Chipn Admin")')
     const headerContainer = header.locator('..')
     await expect(headerContainer).toBeVisible()
   })
@@ -201,7 +201,7 @@ test.describe('Admin Login Page E2E Tests', () => {
 
   test('credentials should be clickable/copyable', async ({ page }) => {
     // All credential text should be accessible
-    const adminEmail = page.locator('text=admin@tandapay.com')
+    const adminEmail = page.locator('text=admin@chipn.com')
     const adminPassword = page.locator('text=admin123')
 
     await expect(adminEmail).toBeVisible()

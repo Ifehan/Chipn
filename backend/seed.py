@@ -29,8 +29,8 @@ VENDORS = [
 
 ADMIN = {
     "first_name": "Admin",
-    "last_name": "TandaPay",
-    "email": "admin@tandapay.com",
+    "last_name": "Chipn",
+    "email": "admin@chipn.com",
     "phone_number": "0700000000",
     "id_type": "National ID",
     "password": "Admin@2026!",

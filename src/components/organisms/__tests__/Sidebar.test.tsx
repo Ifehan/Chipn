@@ -11,7 +11,7 @@ describe('Sidebar', () => {
 
   test('renders sidebar with branding', () => {
     renderWithRouter(<Sidebar />)
-    expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
+    expect(screen.getByText('Chipn Admin')).toBeInTheDocument()
     expect(screen.getByText('Bill Splitting Dashboard')).toBeInTheDocument()
   })
 
@@ -50,7 +50,7 @@ describe('Sidebar', () => {
   test('renders user profile section', () => {
     renderWithRouter(<Sidebar />)
     expect(screen.getByText('Admin User')).toBeInTheDocument()
-    expect(screen.getByText('admin@tandapay.com')).toBeInTheDocument()
+    expect(screen.getByText('admin@chipn.com')).toBeInTheDocument()
   })
 
   test('renders logout button', () => {

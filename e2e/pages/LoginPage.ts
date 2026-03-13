@@ -19,7 +19,7 @@ export class LoginPage extends BasePage {
     super(page);
 
     // Initialize locators based on actual LoginPage component
-    this.heading = page.getByRole('heading', { name: /tandapay/i });
+    this.heading = page.getByRole('heading', { name: /chipn/i });
     this.subtitle = page.getByText(/split bills and pay instantly via m-pesa/i);
     this.emailInput = page.getByLabel(/email address/i);
     this.passwordInput = page.getByLabel(/password/i);

@@ -55,7 +55,7 @@ test.describe('Admin Dashboard E2E Tests', () => {
 
   test('should render sidebar with navigation', async ({ page }) => {
     // Check sidebar branding
-    await expect(page.locator('text=TandaPay Admin')).toBeVisible()
+    await expect(page.locator('text=Chipn Admin')).toBeVisible()
     await expect(page.locator('text=Bill Splitting Dashboard')).toBeVisible()
 
     // Check navigation items
@@ -68,7 +68,7 @@ test.describe('Admin Dashboard E2E Tests', () => {
   test('should display user profile in sidebar', async ({ page }) => {
     // Use more specific selector for the user name
     await expect(page.locator('div:text("Admin User")')).toBeVisible()
-    await expect(page.locator('text=admin@tandapay.com')).toBeVisible()
+    await expect(page.locator('text=admin@chipn.com')).toBeVisible()
   })
 
   test('should have logout button in sidebar', async ({ page }) => {

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     MPESA_CALLBACK_URL: str
 
     RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "TandaPay <onboarding@resend.dev>"
+    EMAIL_FROM: str = "Chipn <onboarding@resend.dev>"
 
     FRONTEND_URL: str = "http://localhost:5173"
 

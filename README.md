@@ -1,6 +1,6 @@
-# Tunga Pay
+# Chipn
 
-A modern bill splitting and payment management application built with React, TypeScript, and Tailwind CSS. Tunga Pay helps users manage shared expenses, split bills with groups, and track transaction history.
+A modern bill splitting and payment management application built with React, TypeScript, and Tailwind CSS. Chipn helps users manage shared expenses, split bills with groups, and track transaction history.
 
 ## 🚀 Features
 
@@ -63,7 +63,7 @@ A modern bill splitting and payment management application built with React, Typ
 ## 📁 Project Structure
 
 ```
-tunga-pay/
+chipn/
 ├── docker/                     # Docker configuration
 │   ├── dev/                    # Development environment
 │   │   └── Dockerfile          # Dev Dockerfile
@@ -222,7 +222,7 @@ Full page components that combine organisms, molecules, and atoms:
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd tunga-pay
+cd chipn
 ```
 
 2. Install dependencies:
@@ -245,12 +245,12 @@ http://localhost:5173
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd tunga-pay
+cd chipn
 ```
 
 2. Start the development container:
 ```bash
-docker-compose up tunga-pay-dev
+docker-compose up chipn-dev
 ```
 
 3. Open your browser and navigate to:
@@ -264,7 +264,7 @@ The development container includes hot-reload, so changes to your code will be r
 
 1. Build and start the production container:
 ```bash
-docker-compose up tunga-pay-prod
+docker-compose up chipn-prod
 ```
 
 2. Open your browser and navigate to:
@@ -287,52 +287,52 @@ The production build is optimized and served via Nginx.
 **Development:**
 ```bash
 # Start development container
-docker-compose up tunga-pay-dev
+docker-compose up chipn-dev
 
 # Start in detached mode
-docker-compose up -d tunga-pay-dev
+docker-compose up -d chipn-dev
 
 # Stop development container
 docker-compose down
 
 # View logs
-docker-compose logs -f tunga-pay-dev
+docker-compose logs -f chipn-dev
 
 # Rebuild container
-docker-compose up --build tunga-pay-dev
+docker-compose up --build chipn-dev
 ```
 
 **Production:**
 ```bash
 # Build and start production container
-docker-compose up tunga-pay-prod
+docker-compose up chipn-prod
 
 # Start in detached mode
-docker-compose up -d tunga-pay-prod
+docker-compose up -d chipn-prod
 
 # Stop production container
 docker-compose down
 
 # View logs
-docker-compose logs -f tunga-pay-prod
+docker-compose logs -f chipn-prod
 
 # Rebuild container
-docker-compose up --build tunga-pay-prod
+docker-compose up --build chipn-prod
 ```
 
 **Using Dockerfile directly:**
 ```bash
 # Build development image
-docker build -f docker/dev/Dockerfile -t tunga-pay:dev .
+docker build -f docker/dev/Dockerfile -t chipn:dev .
 
 # Run development container
-docker run -p 5173:5173 -v $(pwd):/app -v /app/node_modules tunga-pay:dev
+docker run -p 5173:5173 -v $(pwd):/app -v /app/node_modules chipn:dev
 
 # Build production image
-docker build -f docker/prod/Dockerfile -t tunga-pay:prod .
+docker build -f docker/prod/Dockerfile -t chipn:prod .
 
 # Run production container
-docker run -p 80:80 tunga-pay:prod
+docker run -p 80:80 chipn:prod
 ```
 
 ### Testing
@@ -503,13 +503,13 @@ The project includes a multi-stage Dockerfile with three targets:
 
 ### Docker Compose Services
 
-**tunga-pay-dev:**
+**chipn-dev:**
 - Development environment with hot-reload
 - Volume mounting for live code changes
 - Port 5173 exposed
 - Auto-restart enabled
 
-**tunga-pay-prod:**
+**chipn-prod:**
 - Production-ready deployment
 - Optimized Nginx configuration
 - Port 80 exposed
@@ -608,7 +608,7 @@ For a complete list of available documentation, see the [**Documentation Index**
 
 ## 👥 Team
 
-Tunga Pay Frontend Team
+Chipn Frontend Team
 
 ---
 

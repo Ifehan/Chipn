@@ -40,7 +40,7 @@ describe('LoginPage', () => {
   it('renders login page with title and subtitle', () => {
     renderLoginPage();
 
-    expect(screen.getByText('TandaPay')).toBeInTheDocument();
+    expect(screen.getByText('Chipn')).toBeInTheDocument();
     expect(screen.getByText(/split bills and pay instantly via m-pesa/i)).toBeInTheDocument();
   });
 

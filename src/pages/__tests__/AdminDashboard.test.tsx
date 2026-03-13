@@ -74,7 +74,7 @@ describe('AdminDashboard', () => {
 
   test('renders Sidebar component', () => {
     renderWithProviders(<AdminDashboard />)
-    expect(screen.getByText('TandaPay Admin')).toBeInTheDocument()
+    expect(screen.getByText('Chipn Admin')).toBeInTheDocument()
     expect(screen.getByText('Bill Splitting Dashboard')).toBeInTheDocument()
   })
 })

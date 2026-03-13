@@ -1,6 +1,6 @@
-# Tunga Pay Documentation
+# Chipn Documentation
 
-Welcome to the Tunga Pay documentation! This directory contains comprehensive guides for developing, testing, and maintaining the application.
+Welcome to the Chipn documentation! This directory contains comprehensive guides for developing, testing, and maintaining the application.
 
 ## 📚 Documentation Index
 
@@ -27,7 +27,7 @@ Welcome to the Tunga Pay documentation! This directory contains comprehensive gu
 
 ## 🧪 Testing Overview
 
-Tunga Pay uses a comprehensive testing strategy with multiple layers:
+Chipn uses a comprehensive testing strategy with multiple layers:
 
 ### Unit & Integration Tests (Jest + RTL)
 - **Location**: `src/components/**/__tests__/`, `src/services/**/__tests__/`, `src/pages/**/__tests__/`, `src/hooks/**/__tests__/`
