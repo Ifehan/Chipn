@@ -5,7 +5,7 @@ import { lazyComponent } from '../lazy-loading';
 // Suppress console.error for expected error boundary tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 afterAll(() => {
   console.error = originalConsoleError;

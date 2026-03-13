@@ -27,7 +27,7 @@ describe('RequestDeduplicator', () => {
 
     it('returns the same in-flight promise for duplicate keys', async () => {
       const { promise, resolve } = createControllableRequest<string>();
-      const request = jest.fn(() => promise);
+      const request = vi.fn(() => promise);
 
       const p1 = deduplicator.execute('key-1', request);
       const p2 = deduplicator.execute('key-1', request);
@@ -42,8 +42,8 @@ describe('RequestDeduplicator', () => {
     });
 
     it('executes separate requests for different keys', async () => {
-      const requestA = jest.fn(() => Promise.resolve('result-a'));
-      const requestB = jest.fn(() => Promise.resolve('result-b'));
+      const requestA = vi.fn(() => Promise.resolve('result-a'));
+      const requestB = vi.fn(() => Promise.resolve('result-b'));
 
       const [a, b] = await Promise.all([
         deduplicator.execute('key-a', requestA),
@@ -77,7 +77,7 @@ describe('RequestDeduplicator', () => {
 
     it('propagates rejection to all callers sharing the same in-flight request', async () => {
       const { promise, reject } = createControllableRequest<string>();
-      const request = jest.fn(() => promise);
+      const request = vi.fn(() => promise);
 
       const p1 = deduplicator.execute('key-1', request);
       const p2 = deduplicator.execute('key-1', request);
@@ -90,8 +90,8 @@ describe('RequestDeduplicator', () => {
     });
 
     it('allows a new request for the same key after the previous one resolves', async () => {
-      const firstRequest = jest.fn(() => Promise.resolve('first'));
-      const secondRequest = jest.fn(() => Promise.resolve('second'));
+      const firstRequest = vi.fn(() => Promise.resolve('first'));
+      const secondRequest = vi.fn(() => Promise.resolve('second'));
 
       const first = await deduplicator.execute('key-1', firstRequest);
       const second = await deduplicator.execute('key-1', secondRequest);
@@ -103,8 +103,8 @@ describe('RequestDeduplicator', () => {
     });
 
     it('allows a new request for the same key after the previous one rejects', async () => {
-      const failingRequest = jest.fn(() => Promise.reject(new Error('fail')));
-      const successRequest = jest.fn(() => Promise.resolve('recovered'));
+      const failingRequest = vi.fn(() => Promise.reject(new Error('fail')));
+      const successRequest = vi.fn(() => Promise.resolve('recovered'));
 
       await expect(deduplicator.execute('key-1', failingRequest)).rejects.toThrow('fail');
       const result = await deduplicator.execute('key-1', successRequest);
@@ -219,7 +219,7 @@ describe('RequestDeduplicator', () => {
 
     it('does not increment count for duplicate in-flight keys', () => {
       const { promise, resolve } = createControllableRequest<string>();
-      const request = jest.fn(() => promise);
+      const request = vi.fn(() => promise);
 
       deduplicator.execute('key-1', request);
       deduplicator.execute('key-1', request);
@@ -263,8 +263,8 @@ describe('RequestDeduplicator', () => {
       expect(requestDeduplicator).toBeInstanceOf(RequestDeduplicator);
     });
 
-    it('is the same instance across imports', () => {
-      const { requestDeduplicator: second } = require('../request-deduplicator');
+    it('is the same instance across imports', async () => {
+      const { requestDeduplicator: second } = await import('../request-deduplicator');
       expect(requestDeduplicator).toBe(second);
     });
   });

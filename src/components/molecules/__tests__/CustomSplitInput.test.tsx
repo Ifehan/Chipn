@@ -7,12 +7,12 @@ describe('CustomSplitInput', () => {
     participants: ['+254711111111', '+254722222222'],
     currentUserPhone: '+254700000000',
     customAmounts: {},
-    onCustomAmountsChange: jest.fn(),
+    onCustomAmountsChange: vi.fn(),
     totalAmount: 300,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders all participants including current user', () => {

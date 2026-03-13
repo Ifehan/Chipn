@@ -6,8 +6,8 @@ const originalConsoleLog = console.log;
 
 beforeEach(() => {
   performanceMonitor.clear();
-  console.warn = jest.fn();
-  console.log = jest.fn();
+  console.warn = vi.fn();
+  console.log = vi.fn();
 });
 
 afterEach(() => {

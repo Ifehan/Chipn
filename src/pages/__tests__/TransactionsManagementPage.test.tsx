@@ -3,14 +3,14 @@ import TransactionsManagementPage from '../TransactionsManagementPage';
 import { dashboardService } from '../../services/dashboard.service';
 
 // Mock dependencies
-jest.mock('../../services/dashboard.service');
-jest.mock('../../services', () => ({
-  logger: { error: jest.fn() },
+vi.mock('../../services/dashboard.service');
+vi.mock('../../services', () => ({
+  logger: { error: vi.fn() },
 }));
-jest.mock('../../components/organisms/Sidebar', () => ({
+vi.mock('../../components/organisms/Sidebar', () => ({
   Sidebar: () => <div data-testid="sidebar" />,
 }));
-jest.mock('../../components/atoms/StatCard', () => ({
+vi.mock('../../components/atoms/StatCard', () => ({
   StatCard: ({ label, amount }: { label: string; amount: string }) => (
     <div data-testid="stat-card">
       <span>{label}</span>
@@ -18,7 +18,7 @@ jest.mock('../../components/atoms/StatCard', () => ({
     </div>
   ),
 }));
-jest.mock('../../components/molecules/TransactionsTable', () => ({
+vi.mock('../../components/molecules/TransactionsTable', () => ({
   TransactionsTable: ({
     transactions,
     currentPage,
@@ -80,7 +80,7 @@ const mockedDashboardService = dashboardService as jest.Mocked<typeof dashboardS
 
 describe('TransactionsManagementPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockedDashboardService.getRecentTransactions.mockResolvedValue(mockTransactionsResponse);
   });
 

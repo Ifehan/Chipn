@@ -12,13 +12,23 @@ import { usersService } from '../../services/users.service';
 import type { User } from '../../services/types/user.types';
 
 // Mock services
-jest.mock('../../services/auth.service');
-jest.mock('../../services/users.service');
+vi.mock('../../services/auth.service', () => ({
+  authService: {
+    hasToken: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+  },
+}));
+vi.mock('../../services/users.service', () => ({
+  usersService: {
+    getCurrentUser: vi.fn(),
+  },
+}));
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -39,7 +49,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('AuthContext & useAuth Hook', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
     sessionStorage.clear();
   });
@@ -47,7 +57,7 @@ describe('AuthContext & useAuth Hook', () => {
   describe('useAuth Hook Initialization', () => {
     it('should throw error when used outside AuthProvider', () => {
       // Suppress error output for this test
-      const consoleError = jest.spyOn(console, 'error').mockImplementation();
+      const consoleError = vi.spyOn(console, 'error').mockImplementation();
 
       expect(() => {
         renderHook(() => useAuth());
@@ -57,8 +67,7 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should initialize with default values during loading', () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -74,8 +83,7 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('Authentication Flow', () => {
     it('should check auth state on mount', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -87,9 +95,8 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should load user data if token exists on mount', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -102,9 +109,8 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should handle getCurrentUser error and logout on 401', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock).mockRejectedValue({
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
         status: 401,
         message: 'Unauthorized',
       });
@@ -123,10 +129,10 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('Login', () => {
     it('should successfully login user', async () => {
-      (authService.login as jest.Mock).mockResolvedValue({
+      (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
         access_token: 'new-token',
       });
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -149,9 +155,8 @@ describe('AuthContext & useAuth Hook', () => {
 
     it('should handle login failure', async () => {
       const loginError = { message: 'Invalid credentials', status: 401 };
-      (authService.login as jest.Mock).mockRejectedValue(loginError);
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.login as ReturnType<typeof vi.fn>).mockRejectedValue(loginError);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -172,12 +177,11 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should call login service with correct credentials', async () => {
-      (authService.login as jest.Mock).mockResolvedValue({
+      (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
         access_token: 'token',
       });
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -198,9 +202,8 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('Logout', () => {
     it('should logout user and clear state', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -219,9 +222,8 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should clear error on logout', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock).mockRejectedValue({
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
         status: 500,
         message: 'Server error',
       });
@@ -242,9 +244,8 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('RefreshUser', () => {
     it('should refresh user data', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock)
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockUser)
         .mockResolvedValueOnce({
           ...mockUser,
@@ -265,9 +266,8 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should handle refresh error', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue('mock-token');
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(true);
-      (usersService.getCurrentUser as jest.Mock)
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockUser)
         .mockRejectedValueOnce({
           status: 500,
@@ -292,8 +292,7 @@ describe('AuthContext & useAuth Hook', () => {
   describe('Edge Cases', () => {
     it('should not redirect to login if already on login page', async () => {
       window.location.pathname = '/login';
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -305,10 +304,10 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should handle multiple login attempts', async () => {
-      (authService.login as jest.Mock).mockResolvedValue({
+      (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
         access_token: 'token',
       });
-      (usersService.getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -327,8 +326,7 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('isAuthenticated should be false if user is null', async () => {
-      (authService.getAccessToken as jest.Mock).mockReturnValue(null);
-      (authService.isAuthenticated as jest.Mock).mockReturnValue(false);
+      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 

@@ -2,9 +2,9 @@ import { dashboardService } from '../dashboard.service';
 import { apiClient } from '../../services/api-client';
 
 // Mock the apiClient
-jest.mock('../../services/api-client', () => ({
+vi.mock('../../services/api-client', () => ({
   apiClient: {
-    get: jest.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -12,7 +12,7 @@ const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 describe('Dashboard Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getRecentTransactions', () => {

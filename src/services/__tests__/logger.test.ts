@@ -8,10 +8,10 @@ const originalConsoleError = console.error;
 
 beforeEach(() => {
   logger.clear();
-  console.debug = jest.fn();
-  console.info = jest.fn();
-  console.warn = jest.fn();
-  console.error = jest.fn();
+  console.debug = vi.fn();
+  console.info = vi.fn();
+  console.warn = vi.fn();
+  console.error = vi.fn();
 });
 
 afterEach(() => {

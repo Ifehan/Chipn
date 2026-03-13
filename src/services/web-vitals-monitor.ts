@@ -16,7 +16,7 @@ export interface VitalThresholds {
   needsImprovement: number;
 }
 
-class WebVitalsMonitor {
+export class WebVitalsMonitor {
   private vitals: WebVital[] = [];
   private thresholds: Record<string, VitalThresholds> = {
     LCP: { good: 2500, needsImprovement: 4000 }, // Largest Contentful Paint

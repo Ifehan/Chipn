@@ -4,8 +4,8 @@ const originalConsoleWarn = console.warn;
 const originalConsoleLog = console.log;
 
 // Must mock browser APIs before the module is loaded
-const mockObserve = jest.fn();
-const mockDisconnect = jest.fn();
+const mockObserve = vi.fn();
+const mockDisconnect = vi.fn();
 let capturedCallbacks: Record<string, (list: { getEntries: () => unknown[] }) => void> = {};
 
 class MockPerformanceObserver {
@@ -22,13 +22,11 @@ class MockPerformanceObserver {
   }
 }
 
+import { WebVitalsMonitor } from '../web-vitals-monitor';
+
 // Helper to get a fresh monitor instance with clean state
 const getFreshMonitor = async () => {
-  let monitor: typeof import('../web-vitals-monitor');
-  jest.isolateModules(() => {
-    monitor = require('../web-vitals-monitor');
-  });
-  return monitor!.webVitalsMonitor;
+  return new WebVitalsMonitor();
 };
 
 beforeAll(() => {
@@ -46,8 +44,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   capturedCallbacks = {};
-  console.warn = jest.fn();
-  console.log = jest.fn();
+  console.warn = vi.fn();
+  console.log = vi.fn();
   delete (window as any).location;
   (window as any).location = { href: 'http://localhost/' };
 });
