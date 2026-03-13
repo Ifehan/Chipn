@@ -38,7 +38,6 @@ class TransactionResponse(BaseModel):
     mpesa_receipt_number: Optional[str]
     transaction_date: Optional[str]
     status: str
-    callback_url: Optional[str]
     callback_received: Optional[str]
     result_code: Optional[str]
     result_desc: Optional[str]

@@ -45,6 +45,7 @@ vi.mock('../../services/auth.service', () => ({
     hasToken: vi.fn(),
     getAccessToken: vi.fn(),
     logout: vi.fn(),
+      refreshAccessToken: vi.fn().mockResolvedValue(null),
   },
 }));
 
@@ -131,8 +132,7 @@ describe('ProfileSettingsPage', () => {
     vi.clearAllMocks();
 
     // Mock auth service
-    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
-    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('mock-token');
 
     // Mock users service for AuthProvider
     (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUserData);

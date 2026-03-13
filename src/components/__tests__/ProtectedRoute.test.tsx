@@ -1,4 +1,3 @@
-// Mock the api-client to avoid import.meta issues
 vi.mock('../../services/api-client');
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -10,9 +9,8 @@ import { usersService } from '../../services/users.service';
 
 vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: vi.fn(),
-    getAccessToken: vi.fn(),
-    logout: vi.fn(),
+    refreshAccessToken: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -21,6 +19,16 @@ vi.mock('../../services/users.service', () => ({
     getCurrentUser: vi.fn(),
   },
 }));
+
+const mockUser = {
+  id: 'user-123',
+  email: 'test@example.com',
+  first_name: 'Test',
+  last_name: 'User',
+  phone_number: '254700000000',
+  id_type: 'national_id',
+  role: 'user' as const,
+};
 
 const TestComponent = () => <div>Protected Content</div>;
 const LoginComponent = () => <div>Login Page</div>;
@@ -47,22 +55,13 @@ const renderWithRouter = () =>
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(false);
-    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
+    // Default: no valid session (refresh returns null)
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   it('renders children when user is authenticated', async () => {
-    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
-    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
-    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
-      id: 'user-123',
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      phone_number: '254700000000',
-      id_type: 'national_id',
-      role: 'user',
-    });
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('mock-token');
+    (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
     renderWithRouter();
 
@@ -71,7 +70,7 @@ describe('ProtectedRoute', () => {
     });
   });
 
-  it('redirects to login when no token exists', async () => {
+  it('redirects to login when no session cookie exists', async () => {
     renderWithRouter();
 
     await waitFor(() => {
@@ -80,9 +79,8 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('redirects to login when token exists but user fetch fails (expired token)', async () => {
-    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
-    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('expired-token');
+  it('redirects to login when session is expired', async () => {
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('expired-token');
     (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
       message: 'Unauthorized',
       status: 401,

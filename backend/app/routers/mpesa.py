@@ -1,6 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+import hmac
+import logging
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.transaction import Transaction
@@ -14,7 +19,37 @@ from app.schemas.payment import (
 )
 from app.services.mpesa import initiate_stk_push
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/mpesa", tags=["mpesa"])
+
+# Safaricom's production IP ranges (expand as needed)
+_SAFARICOM_IPS = {
+    "196.201.214.200",
+    "196.201.214.206",
+    "196.201.213.100",
+    "196.201.214.107",
+    "196.201.214.178",
+    "196.201.213.114",
+    "196.201.212.127",
+    "196.201.212.138",
+    "196.201.212.129",
+    "196.201.212.136",
+    "196.201.212.74",
+    "196.201.212.69",
+}
+
+
+def _verify_callback_secret(secret: str | None) -> None:
+    """C-2: Verify the shared callback secret to prevent fake payment completions."""
+    if not settings.MPESA_CALLBACK_SECRET:
+        return  # Not configured — skip (dev only)
+    if not secret or not hmac.compare_digest(secret, settings.MPESA_CALLBACK_SECRET):
+        logger.warning("M-Pesa callback rejected: invalid or missing secret")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden",
+        )
 
 
 @router.post("/stk-push", response_model=StkPushResponse)
@@ -47,21 +82,22 @@ async def stk_push(
                 account_reference=request.account_reference,
                 transaction_desc=request.transaction_desc,
                 status="pending",
-                callback_url=mpesa_response.get("CallBackURL"),
                 user_id=current_user.id,
                 vendor_id=request.vendor_id,
             )
             db.add(transaction)
             results.append(mpesa_response)
 
-        except Exception as e:
+        except Exception as exc:  # noqa: BLE001
+            # M-2: Log full error server-side; store only safe message for client
+            logger.exception("STK push failed for user %s: %s", current_user.id, exc)
             transaction = Transaction(
                 phone_number=payment.phone_number,
                 amount=payment.amount,
                 account_reference=request.account_reference,
                 transaction_desc=request.transaction_desc,
                 status="failed",
-                error_message=str(e),
+                error_message="Payment initiation failed",
                 user_id=current_user.id,
                 vendor_id=request.vendor_id,
             )
@@ -72,7 +108,7 @@ async def stk_push(
     if not results:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="All STK push requests failed",
+            detail="Payment initiation failed. Please try again.",
         )
 
     first = results[0]
@@ -88,7 +124,11 @@ async def stk_push(
 
 @router.get("/transactions", response_model=TransactionHistoryResponse)
 def get_transactions(
-    status: str = Query(default="all", description="Filter by status: pending, completed, failed, all"),
+    # M-3: Validate status against allowed values only
+    status: Literal["pending", "completed", "failed", "all"] = Query(
+        default="all",
+        description="Filter by status",
+    ),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
@@ -117,8 +157,22 @@ def get_transactions(
 
 
 @router.post("/callback", status_code=status.HTTP_200_OK)
-def mpesa_callback(payload: MpesaCallback, db: Session = Depends(get_db)):
+def mpesa_callback(
+    payload: MpesaCallback,
+    request: Request,
+    secret: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    # C-2: Verify shared secret before processing any payment update
+    _verify_callback_secret(secret)
+
     callback = payload.Body.stkCallback
+    logger.info(
+        "M-Pesa callback received: checkout_id=%s result_code=%s",
+        callback.CheckoutRequestID,
+        callback.ResultCode,
+    )
+
     transaction = (
         db.query(Transaction)
         .filter(Transaction.checkout_request_id == callback.CheckoutRequestID)
@@ -140,7 +194,14 @@ def mpesa_callback(payload: MpesaCallback, db: Session = Depends(get_db)):
         transaction.status = "completed"
     else:
         transaction.status = "failed"
-        transaction.error_message = callback.ResultDesc
+        # M-2: Store safe message; log real error
+        logger.warning(
+            "STK callback failed: checkout_id=%s result=%s desc=%s",
+            callback.CheckoutRequestID,
+            callback.ResultCode,
+            callback.ResultDesc,
+        )
+        transaction.error_message = "Payment was not completed"
 
     db.commit()
     return {"ResultCode": 0, "ResultDesc": "Accepted"}

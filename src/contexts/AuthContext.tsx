@@ -26,10 +26,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  /**
-   * Fetch current user data from /users/me
-   * This is called once after login or on app initialization if token exists
-   */
   const fetchCurrentUser = useCallback(async () => {
     try {
       setLoading(true)
@@ -39,7 +35,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (err: unknown) {
       const apiErr = err as { message?: string; status?: number }
       setError(apiErr.message || 'Failed to fetch user data')
-
       if (apiErr?.status === 401) {
         await authService.logout()
         setUser(null)
@@ -50,13 +45,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   /**
-   * Initialize auth state on mount.
-   * If a token exists, attempt to fetch the current user.
-   * A 401 response will clear the token automatically via the API client.
+   * C-4: On app startup, silently attempt to refresh the access token using the
+   * httpOnly cookie. This restores the session after a page refresh without
+   * touching localStorage. If the cookie is expired or missing, user goes to login.
    */
   useEffect(() => {
     const initAuth = async () => {
-      if (authService.hasToken()) {
+      const newToken = await authService.refreshAccessToken()
+      if (newToken) {
         await fetchCurrentUser()
       } else {
         setLoading(false)
@@ -66,19 +62,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initAuth()
   }, [fetchCurrentUser])
 
-  /**
-   * Login handler
-   * Performs login and fetches user data
-   */
   const login = async (email: string, password: string) => {
     try {
       setLoading(true)
       setError(null)
-
-      // Perform login
       await authService.login({ email, password })
-
-      // Fetch user data after successful login
       await fetchCurrentUser()
     } catch (err: unknown) {
       const apiErr = err as { message?: string }
@@ -89,10 +77,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  /**
-   * Logout handler
-   * Revokes refresh token on the server, clears auth state and redirects to login
-   */
   const logout = useCallback(async () => {
     await authService.logout()
     setUser(null)
@@ -100,10 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     navigate('/login', { replace: true })
   }, [navigate])
 
-  /**
-   * Refresh user data
-   * Can be called manually if user data needs to be updated
-   */
   const refreshUser = async () => {
     await fetchCurrentUser()
   }
@@ -121,10 +101,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-/**
- * Hook to use auth context
- * Must be used within AuthProvider
- */
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

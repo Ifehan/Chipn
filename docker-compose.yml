@@ -1,27 +1,26 @@
-version: '3.8'
+# H-3: DB port NOT exposed to host — only accessible within the internal network
+# H-4: Use environment variables / secrets for DB credentials in production, not hardcoded values
+# L-3: 'version' key removed (deprecated in modern Docker Compose)
 
 services:
-  # PostgreSQL database
   db:
     image: postgres:16-alpine
     container_name: chipn-db
     environment:
-      POSTGRES_USER: chipn
-      POSTGRES_PASSWORD: chipn_password
-      POSTGRES_DB: chipn_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-chipn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-chipn_db}
+    # H-3: No ports: block — DB is NOT accessible from outside Docker network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - chipn-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chipn -d chipn_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chipn} -d ${POSTGRES_DB:-chipn_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # FastAPI backend
   backend:
     build:
       context: ./backend
@@ -30,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://chipn:chipn_password@db:5432/chipn_db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-chipn}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-chipn_db}
     env_file:
       - ./backend/.env
     depends_on:
@@ -40,7 +39,6 @@ services:
       - chipn-network
     restart: unless-stopped
 
-  # Development service
   chipn-dev:
     build:
       context: .
@@ -59,7 +57,6 @@ services:
     stdin_open: true
     tty: true
 
-  # Production service
   chipn-prod:
     build:
       context: .

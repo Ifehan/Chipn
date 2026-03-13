@@ -1,21 +1,23 @@
 /**
  * Authentication Service
- * Handles all authentication-related API operations
- * Base URL: http://localhost:8000 (configurable via VITE_API_BASE_URL)
  *
- * API Endpoints:
- * - POST /auth/login - Login
- * - POST /auth/password-reset/request - Request Password Reset
+ * Security model:
+ * - Access token: stored in MODULE MEMORY ONLY (never localStorage / sessionStorage)
+ *   → Invisible to XSS. Lost on page refresh — recovered via /auth/refresh on app boot.
+ * - Refresh token: stored in httpOnly cookie set by the server
+ *   → JavaScript cannot read it. Sent automatically by the browser to /auth/* routes.
  */
 
 import { apiClient } from './api-client';
 import type {
   LoginRequest,
   LoginResponse,
-  LogoutRequest,
   PasswordResetRequest,
   PasswordResetResponse,
 } from './types/auth.types';
+
+// C-4: Access token lives only in memory — not in localStorage
+let _accessToken: string | null = null;
 
 export class AuthService {
   private readonly basePath = '/auth';
@@ -23,20 +25,8 @@ export class AuthService {
   /**
    * Login user
    * POST /auth/login
-   * Used on: Login page (/login)
-   *
-   * Request body:
-   * {
-   *   "email": "user@example.com",
-   *   "password": "string"
-   * }
-   *
-   * Response body:
-   * {
-   *   "access_token": "string",
-   *   "token_type": "bearer",
-   *   "expires_in": 0
-   * }
+   * Server sets refresh_token as httpOnly cookie.
+   * We store the access_token in memory only.
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>(
@@ -45,62 +35,59 @@ export class AuthService {
     );
 
     if (response.access_token) {
-      localStorage.setItem('authToken', response.access_token);
-    }
-    if (response.refresh_token) {
-      localStorage.setItem('refreshToken', response.refresh_token);
+      _accessToken = response.access_token;
     }
 
     return response;
   }
 
   /**
-   * Refresh access token using stored refresh token
-   * POST /auth/refresh
-   * Returns new access token, or null if refresh token is invalid/missing
+   * Silently refresh the access token using the httpOnly refresh token cookie.
+   * Called on app startup and by the API client on 401.
+   * Returns the new access token, or null if the session has expired.
    */
   async refreshAccessToken(): Promise<string | null> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return null;
-
     try {
       const response = await apiClient.post<LoginResponse>(
         `${this.basePath}/refresh`,
-        { refresh_token: refreshToken }
+        undefined,
+        { credentials: 'include' }   // Browser sends the httpOnly cookie automatically
       );
 
       if (response.access_token) {
-        localStorage.setItem('authToken', response.access_token);
+        _accessToken = response.access_token;
+        return response.access_token;
       }
-      if (response.refresh_token) {
-        localStorage.setItem('refreshToken', response.refresh_token);
-      }
-
-      return response.access_token;
-    } catch {
-      this.logout();
       return null;
+    } catch {
+      _accessToken = null;
+      return null;
+    }
+  }
+
+  /**
+   * Logout user
+   * POST /auth/logout — server revokes the refresh token cookie server-side.
+   */
+  async logout(): Promise<void> {
+    try {
+      await apiClient.post<void>(
+        `${this.basePath}/logout`,
+        undefined,
+        { credentials: 'include' }
+      );
+    } catch {
+      // Best-effort — clear locally even if server call fails
+    } finally {
+      _accessToken = null;
     }
   }
 
   /**
    * Request password reset
    * POST /auth/password-reset/request
-   * Used on: Password reset page (/password-reset)
-   *
-   * Request body:
-   * {
-   *   "email": "user@example.com"
-   * }
-   *
-   * Response body:
-   * {
-   *   "message": "Password reset link has been sent to your email."
-   * }
    */
-  async requestPasswordReset(
-    data: PasswordResetRequest
-  ): Promise<PasswordResetResponse> {
+  async requestPasswordReset(data: PasswordResetRequest): Promise<PasswordResetResponse> {
     return apiClient.post<PasswordResetResponse>(
       `${this.basePath}/password-reset/request`,
       data
@@ -108,43 +95,18 @@ export class AuthService {
   }
 
   /**
-   * Logout user
-   * Revokes refresh token on the backend, then clears all tokens from storage
-   */
-  async logout(): Promise<void> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (refreshToken) {
-      try {
-        await apiClient.post<void>(`${this.basePath}/logout`, { refresh_token: refreshToken } as LogoutRequest);
-      } catch {
-        // Best-effort: clear locally even if server call fails
-      }
-    }
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-  }
-
-  /**
-   * Check if a token exists in storage.
-   * The authoritative isAuthenticated state lives in AuthContext (derived from user object).
-   * This is only used for the initial app load check.
+   * Returns true if an in-memory access token exists.
+   * The app should call refreshAccessToken() on startup to restore a session.
    */
   hasToken(): boolean {
-    return localStorage.getItem('authToken') !== null;
+    return _accessToken !== null;
   }
 
   /**
-   * Get stored access token
+   * Returns the in-memory access token (never touches localStorage).
    */
   getAccessToken(): string | null {
-    return localStorage.getItem('authToken');
-  }
-
-  /**
-   * Get stored refresh token
-   */
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+    return _accessToken;
   }
 }
 

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -7,7 +8,7 @@ from app.dependencies import get_current_user
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.schemas.user import CreateUserRequest, UpdateUserRequest, UserResponse
-from app.services.auth import hash_password
+from app.services.auth import hash_password, verify_password
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -69,8 +70,12 @@ def get_user(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if user_id != current_user.id and current_user.role not in ("admin", "support", "analyst"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    # M-6: Check permission and existence together — always 404 to prevent enumeration
+    is_self = user_id == current_user.id
+    is_privileged = current_user.role in ("admin", "support", "analyst")
+
+    if not is_self and not is_privileged:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -87,7 +92,7 @@ def update_user(
     db: Session = Depends(get_db),
 ):
     if user_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -99,3 +104,34 @@ def update_user(
     db.commit()
     db.refresh(user)
     return _attach_transaction_totals(user, db)
+
+
+class ChangeEmailRequest(BaseModel):
+    """M-5: Email changes require current password re-authentication."""
+    new_email: EmailStr
+    current_password: str
+
+
+@router.post("/me/change-email", response_model=UserResponse)
+def change_email(
+    request: ChangeEmailRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(request.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect",
+        )
+
+    existing = db.query(User).filter(User.email == request.new_email).first()
+    if existing and existing.id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already in use",
+        )
+
+    current_user.email = request.new_email
+    db.commit()
+    db.refresh(current_user)
+    return _attach_transaction_totals(current_user, db)

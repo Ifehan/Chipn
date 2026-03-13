@@ -2,13 +2,13 @@ import React from 'react'
 
 // Mock user data for tests
 const mockUser = {
-  id: 1,
+  id: 'user-1',
   first_name: 'Test',
   last_name: 'User',
   email: 'test@example.com',
-  phone_number: '+254712345678',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  phone_number: '254712345678',
+  id_type: 'national_id',
+  role: 'user' as const,
 }
 
 // Mock AuthContext values

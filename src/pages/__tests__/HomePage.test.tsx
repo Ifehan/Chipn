@@ -24,6 +24,7 @@ vi.mock('../../services/auth.service', () => ({
     hasToken: vi.fn(),
     getAccessToken: vi.fn(),
     logout: vi.fn(),
+      refreshAccessToken: vi.fn().mockResolvedValue(null),
   },
 }));
 
@@ -91,9 +92,8 @@ describe('HomePage', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     vi.clearAllMocks();
-    // Default to authenticated state
-    (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(true);
-    (authService.getAccessToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+    // Default to authenticated state — new cookie-based flow uses refreshAccessToken
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('mock-token');
     (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',

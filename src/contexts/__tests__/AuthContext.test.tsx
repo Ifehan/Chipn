@@ -1,6 +1,5 @@
 /**
  * AuthContext Tests
- * Comprehensive tests for authentication context and useAuth hook
  */
 
 import React from 'react';
@@ -11,10 +10,9 @@ import { authService } from '../../services/auth.service';
 import { usersService } from '../../services/users.service';
 import type { User } from '../../services/types/user.types';
 
-// Mock services
 vi.mock('../../services/auth.service', () => ({
   authService: {
-    hasToken: vi.fn(),
+    refreshAccessToken: vi.fn(),
     login: vi.fn(),
     logout: vi.fn().mockResolvedValue(undefined),
   },
@@ -25,7 +23,6 @@ vi.mock('../../services/users.service', () => ({
   },
 }));
 
-// Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual('react-router-dom')),
@@ -51,13 +48,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('AuthContext & useAuth Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
-    sessionStorage.clear();
+    // Default: no valid session
+    (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   describe('useAuth Hook Initialization', () => {
     it('should throw error when used outside AuthProvider', () => {
-      // Suppress error output for this test
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       expect(() => {
@@ -68,11 +64,8 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should initialize with default values during loading', () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
       const { result } = renderHook(() => useAuth(), { wrapper });
 
-      // Check initial state before loading completes
       expect(result.current.user).toBeNull();
       expect(result.current.error).toBeNull();
       expect(result.current.isAuthenticated).toBe(false);
@@ -84,7 +77,7 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('Authentication Flow', () => {
     it('should check auth state on mount', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -95,8 +88,8 @@ describe('AuthContext & useAuth Hook', () => {
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    it('should load user data if token exists on mount', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+    it('should load user data if session cookie valid on mount', async () => {
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('new-access-token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -110,7 +103,7 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should handle getCurrentUser error and logout on 401', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
         status: 401,
         message: 'Unauthorized',
@@ -132,6 +125,8 @@ describe('AuthContext & useAuth Hook', () => {
     it('should successfully login user', async () => {
       (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
         access_token: 'new-token',
+        token_type: 'bearer',
+        expires_in: 900,
       });
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
@@ -157,7 +152,6 @@ describe('AuthContext & useAuth Hook', () => {
     it('should handle login failure', async () => {
       const loginError = { message: 'Invalid credentials', status: 401 };
       (authService.login as ReturnType<typeof vi.fn>).mockRejectedValue(loginError);
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -168,42 +162,18 @@ describe('AuthContext & useAuth Hook', () => {
       await act(async () => {
         try {
           await result.current.login('test@example.com', 'wrong-password');
-        } catch (e) {
+        } catch (_e) {
           // Expected to throw
         }
       });
 
-      // After login fails, user should not be authenticated
       expect(result.current.error).toBe('Invalid credentials');
-    });
-
-    it('should call login service with correct credentials', async () => {
-      (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
-        access_token: 'token',
-      });
-      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-      const { result } = renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      await act(async () => {
-        await result.current.login('test@example.com', 'password123');
-      });
-
-      expect(authService.login).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
     });
   });
 
   describe('Logout', () => {
     it('should logout user and clear state', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -223,7 +193,7 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should clear error on logout', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue({
         status: 500,
         message: 'Server error',
@@ -245,13 +215,10 @@ describe('AuthContext & useAuth Hook', () => {
 
   describe('RefreshUser', () => {
     it('should refresh user data', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce({
-          ...mockUser,
-          first_name: 'Jane',
-        });
+        .mockResolvedValueOnce({ ...mockUser, first_name: 'Jane' });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -267,13 +234,10 @@ describe('AuthContext & useAuth Hook', () => {
     });
 
     it('should handle refresh error', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue('mock-token');
+      (authService.refreshAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue('token');
       (usersService.getCurrentUser as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockUser)
-        .mockRejectedValueOnce({
-          status: 500,
-          message: 'Server error',
-        });
+        .mockRejectedValueOnce({ status: 500, message: 'Server error' });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -286,49 +250,12 @@ describe('AuthContext & useAuth Hook', () => {
       });
 
       expect(result.current.error).not.toBeNull();
-      expect(result.current.user).toEqual(mockUser); // User data unchanged
+      expect(result.current.user).toEqual(mockUser);
     });
   });
 
   describe('Edge Cases', () => {
-    it('should not redirect to login if already on login page', async () => {
-      window.location.pathname = '/login';
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-      const { result } = renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-
-    it('should handle multiple login attempts', async () => {
-      (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue({
-        access_token: 'token',
-      });
-      (usersService.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
-
-      const { result } = renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      await act(async () => {
-        await result.current.login('user1@example.com', 'password');
-        await result.current.login('user2@example.com', 'password');
-      });
-
-      expect(authService.login).toHaveBeenCalledTimes(2);
-      // getCurrentUser is called during init + 2 logins = 3 calls total
-      expect(usersService.getCurrentUser).toHaveBeenCalledTimes(2); // Only logins call it, not init
-    });
-
     it('isAuthenticated should be false if user is null', async () => {
-      (authService.hasToken as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
       const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {

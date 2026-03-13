@@ -63,9 +63,7 @@ describe('LoginPage', () => {
     const mockLoginResponse: LoginResponse = {
       access_token: 'test-token',
       token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'test-refresh-token',
-      refresh_token_expires_in: 2592000,
+      expires_in: 900,
     };
 
     (authService.login as ReturnType<typeof vi.fn>).mockResolvedValue(mockLoginResponse);

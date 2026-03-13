@@ -1,6 +1,11 @@
 /**
  * Base API Client
- * Handles common HTTP operations and configuration
+ *
+ * Security notes:
+ * - Access token read from authService memory (never localStorage)
+ * - Refresh token is an httpOnly cookie — handled by the browser automatically
+ * - On 401: attempts silent token refresh once, then redirects to /login
+ * - L-5: Error `details` never surfaced to the UI
  */
 
 import { API_BASE_URL } from '../lib/env';
@@ -8,7 +13,6 @@ import { API_BASE_URL } from '../lib/env';
 export interface ApiError {
   message: string;
   status: number;
-  details?: unknown;
 }
 
 export class ApiClient {
@@ -20,61 +24,57 @@ export class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private buildConfig(options: RequestInit = {}, token?: string | null): RequestInit {
-    const authToken = token ?? localStorage.getItem('authToken');
-    const config: RequestInit = {
+  private getAccessToken(): string | null {
+    // Lazy import to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('./auth.service').authService.getAccessToken();
+  }
+
+  private buildConfig(options: RequestInit = {}, tokenOverride?: string | null): RequestInit {
+    const token = tokenOverride !== undefined ? tokenOverride : this.getAccessToken();
+    return {
       ...options,
+      credentials: 'include',        // Always send cookies (for refresh token)
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     };
-    return config;
   }
 
   private redirectToLogin(): void {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    sessionStorage.removeItem('isAuthenticated');
     if (window.location.pathname !== '/login') {
       window.location.assign('/login');
     }
   }
 
   private async attemptTokenRefresh(): Promise<string | null> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return null;
-
     try {
+      // Direct fetch to avoid recursion — httpOnly cookie sent automatically
       const res = await fetch(`${this.baseUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        credentials: 'include',
       });
 
       if (!res.ok) return null;
 
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('authToken', data.access_token);
+        // Update in-memory token via authService
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        require('./auth.service')._accessToken = data.access_token;
+        return data.access_token as string;
       }
-      if (data.refresh_token) {
-        localStorage.setItem('refreshToken', data.refresh_token);
-      }
-      return data.access_token ?? null;
+      return null;
     } catch {
       return null;
     }
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    // Skip auto-refresh for auth endpoints to avoid loops
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const isAuthEndpoint = endpoint.startsWith('/auth/');
-
     const url = `${this.baseUrl}${endpoint}`;
     const config = this.buildConfig(options);
 
@@ -82,16 +82,21 @@ export class ApiClient {
       const response = await fetch(url, config);
 
       if (response.status === 401 && !isAuthEndpoint) {
-        // Queue concurrent 401s behind a single refresh call
         if (this.isRefreshing) {
           const newToken = await new Promise<string | null>((resolve) => {
             this.refreshQueue.push(resolve);
           });
-          if (!newToken) throw { message: 'Session expired', status: 401 } as ApiError;
+          if (!newToken) {
+            this.redirectToLogin();
+            throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
+          }
           const retryResponse = await fetch(url, this.buildConfig(options, newToken));
           if (!retryResponse.ok) {
             const errData = await retryResponse.json().catch(() => ({}));
-            throw { message: errData.detail || `HTTP error! status: ${retryResponse.status}`, status: retryResponse.status } as ApiError;
+            throw {
+              message: errData.detail || `Request failed (${retryResponse.status})`,
+              status: retryResponse.status,
+            } as ApiError;
           }
           if (retryResponse.status === 204) return {} as T;
           return retryResponse.json();
@@ -111,7 +116,10 @@ export class ApiClient {
         const retryResponse = await fetch(url, this.buildConfig(options, newToken));
         if (!retryResponse.ok) {
           const errData = await retryResponse.json().catch(() => ({}));
-          throw { message: errData.detail || `HTTP error! status: ${retryResponse.status}`, status: retryResponse.status } as ApiError;
+          throw {
+            message: errData.detail || `Request failed (${retryResponse.status})`,
+            status: retryResponse.status,
+          } as ApiError;
         }
         if (retryResponse.status === 204) return {} as T;
         return retryResponse.json();
@@ -119,12 +127,11 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const error: ApiError = {
-          message: errorData.message || errorData.detail || `HTTP error! status: ${response.status}`,
+        // L-5: Only expose a user-safe message — never raw details
+        throw {
+          message: errorData.detail || errorData.message || `Request failed (${response.status})`,
           status: response.status,
-          details: errorData,
-        };
-        throw error;
+        } as ApiError;
       }
 
       if (response.status === 204) {
@@ -137,9 +144,8 @@ export class ApiClient {
         throw error;
       }
       throw {
-        message: 'Network error occurred',
+        message: 'Network error. Please check your connection.',
         status: 0,
-        details: error,
       } as ApiError;
     }
   }
@@ -177,5 +183,4 @@ export class ApiClient {
   }
 }
 
-// Export singleton instance
 export const apiClient = new ApiClient();

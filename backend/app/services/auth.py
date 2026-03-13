@@ -1,37 +1,51 @@
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from jose import jwt
-from passlib.context import CryptContext
+import bcrypt
+import jwt
 from sqlalchemy.orm import Session
 
 from app.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_ROUNDS = 12
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=_ROUNDS)).decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
 
 
 def create_access_token(subject: str) -> tuple[str, int]:
+    """Returns (encoded_token, expires_in_seconds)."""
     expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-    expire = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
-    payload = {"sub": subject, "exp": expire}
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=expire_minutes)
+    payload = {
+        "sub": subject,
+        "exp": expire,
+        "iat": now,
+        "jti": str(uuid.uuid4()),
+    }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return token, expire_minutes * 60
 
 
 def decode_access_token(token: str) -> Optional[str]:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
         return payload.get("sub")
-    except Exception:
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
         return None
 
 
