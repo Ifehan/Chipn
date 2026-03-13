@@ -1,0 +1,34 @@
+---
+description: Always check OS-level processes before concluding what is or isn't running
+alwaysApply: true
+---
+
+# Check Running Processes Before Assuming
+
+Before stating that "nothing is running" or answering questions about what processes are active, **always check OS-level processes** — not just the terminals folder.
+
+The terminals folder only tracks persistent IDE terminal tabs. Processes started by other agent chats (via Shell tool calls) are invisible to it.
+
+## Required check
+
+```bash
+ps aux | rg "playwright|vitest|jest|pytest|uvicorn|vite|ngrok|pnpm|node" | rg -v "rg |grep "
+```
+
+Run this whenever the user asks:
+- "Are the tests running?"
+- "Is X still running?"
+- "What's currently running?"
+- "Can I move on?" / "Should I wait?"
+- Or any similar question about active processes
+
+## What to report
+
+Map process names to plain English:
+- `playwright` → E2E tests running
+- `vitest` / `jest` → Unit tests running
+- `uvicorn` → Backend server running
+- `vite` → Frontend dev server running
+- `ngrok` → Tunnel running
+
+If a relevant process is found, tell the user what it is and roughly how long it's been running (check `/proc` start time or use `ps -o etime`).
