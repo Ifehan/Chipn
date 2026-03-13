@@ -9,7 +9,7 @@ from starlette.responses import Response
 from app.config import settings
 from app.database import Base, engine
 from app.models import User, Vendor, Transaction, PasswordResetToken, RefreshToken  # noqa: F401
-from app.routers import auth, mpesa, users, vendors
+from app.routers import auth, dashboard, mpesa, users, vendors
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
@@ -69,6 +69,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(vendors.router)
 app.include_router(mpesa.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health")
