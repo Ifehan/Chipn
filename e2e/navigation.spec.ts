@@ -34,6 +34,25 @@ test.describe('Navigation and User Flows', () => {
       });
     });
 
+    // Mock vendors endpoint - CreateNewBillPage calls useVendors() which hits /vendors/
+    // Without this mock, the real backend returns 401, triggering a redirect to /login
+    await page.route('**/vendors/**', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
+      });
+    });
+
+    // Mock mpesa endpoints used by CreateNewBillPage for STK push
+    await page.route('**/mpesa/**', async (route: any) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'STK push initiated' })
+      });
+    });
+
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
     await loginPage.login('test@example.com', 'password123');
@@ -259,6 +278,24 @@ test.describe('Navigation and User Flows', () => {
             phone_number: '+254712345678',
             id_type: 'national_id'
           })
+        });
+      });
+
+      // Mock vendors endpoint - CreateNewBillPage calls useVendors() which hits /vendors/
+      await page.route('**/vendors/**', async (route: any) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([])
+        });
+      });
+
+      // Mock mpesa endpoints
+      await page.route('**/mpesa/**', async (route: any) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'STK push initiated' })
         });
       });
 

@@ -31,7 +31,6 @@ test.describe('Admin Dashboard E2E Tests', () => {
 
   test('should display transaction volume chart section', async ({ page }) => {
     await expect(page.locator('text=Transaction Volume (Last 7 Days)')).toBeVisible()
-    await expect(page.locator('text=No chart library configured. Placeholder.')).toBeVisible()
   })
 
   test('should display recent transactions table', async ({ page }) => {

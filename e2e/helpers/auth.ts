@@ -1,5 +1,41 @@
 import { Page } from '@playwright/test'
 
+const MOCK_VENDORS = [
+  { id: '1', name: 'Java House', paybill_number: '123456', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z' },
+  { id: '2', name: 'Kenyan Bites', paybill_number: '234567', created_at: '2024-02-20T00:00:00Z', updated_at: '2024-02-20T00:00:00Z' },
+  { id: '3', name: 'Mama Deli', paybill_number: '345678', created_at: '2024-03-10T00:00:00Z', updated_at: '2024-03-10T00:00:00Z' },
+  { id: '4', name: 'Tech Café', paybill_number: '456789', created_at: '2023-12-05T00:00:00Z', updated_at: '2023-12-05T00:00:00Z' },
+]
+
+const MOCK_TRANSACTIONS = {
+  transactions: [
+    {
+      id: 'txn001',
+      merchant_request_id: 'MR001',
+      checkout_request_id: 'CR001',
+      phone_number: '254712345678',
+      amount: 500,
+      account_reference: 'Java House',
+      transaction_desc: 'Test payment',
+      mpesa_receipt_number: 'ABC123',
+      transaction_date: new Date().toISOString(),
+      status: 'success',
+      callback_url: null,
+      callback_received: null,
+      result_code: null,
+      result_desc: null,
+      error_message: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: '1',
+    },
+  ],
+  total: 1,
+  page: 1,
+  page_size: 50,
+  status_filter: 'all',
+}
+
 /**
  * Setup mock API responses for authentication
  */
@@ -29,6 +65,24 @@ async function setupAuthMocks(page: Page, email: string) {
         role: 'admin',
         created_at: new Date().toISOString()
       })
+    })
+  })
+
+  // Mock vendors endpoint to prevent 401 redirects from the real backend
+  await page.route('**/vendors/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_VENDORS),
+    })
+  })
+
+  // Mock transactions endpoint to prevent 401 redirects from the real backend
+  await page.route('**/mpesa/transactions**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_TRANSACTIONS),
     })
   })
 }

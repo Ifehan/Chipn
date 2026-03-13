@@ -34,8 +34,8 @@ test.describe('Admin Navigation E2E Tests', () => {
   })
 
   test('should navigate to Transactions page from sidebar', async ({ page }) => {
-    // Click on Transactions link
-    const transactionsLink = page.locator('a[href="/admin/transactions"]')
+    // Click on Transactions link in the sidebar nav (not the "View All →" link on the dashboard)
+    const transactionsLink = page.locator('nav a[href="/admin/transactions"]')
     await transactionsLink.click()
 
     // Wait for navigation

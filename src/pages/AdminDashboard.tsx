@@ -110,7 +110,7 @@ export function AdminDashboard() {
         <div className="max-w-full">
           <header className="mb-6">
             <h1 className="text-2xl font-semibold text-slate-900">Dashboard Overview</h1>
-            <p className="text-sm text-slate-500">Welcome back, Admin!</p>
+            <p className="text-sm text-slate-500">Welcome back, Admin User!</p>
           </header>
 
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

@@ -124,6 +124,23 @@ export function AdminLoginPage() {
               Back to Home
             </button>
           </form>
+
+          <div className="mt-6 border-t border-slate-100 pt-6">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Demo Credentials:</p>
+            <div className="space-y-2">
+              {[
+                { role: 'Admin', email: 'admin@tandapay.com', password: 'admin123' },
+                { role: 'Support Staff', email: 'support@tandapay.com', password: 'support123' },
+                { role: 'Analyst', email: 'analyst@tandapay.com', password: 'analyst123' },
+              ].map(({ role, email, password }) => (
+                <div key={role} className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <p className="font-semibold text-slate-700">{role}</p>
+                  <p>{email}</p>
+                  <p>{password}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
